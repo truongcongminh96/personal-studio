@@ -9,6 +9,175 @@ interface Showroom3DProps {
   onCardClick: (index: number) => void;
 }
 
+type CardConfig = {
+  title: string;
+  subtitle: string;
+  tag: string;
+  accent: string;
+  accentSoft: string;
+  chip: string;
+  details: string[];
+  drawArt: (ctx: CanvasRenderingContext2D) => void;
+};
+
+const projectCardConfigs: CardConfig[] = [
+  {
+    title: 'AI AGENTS WORKFLOW',
+    subtitle: 'Multi-agent planning garden',
+    tag: 'Agentic AI',
+    accent: '#e98d9c',
+    accentSoft: '#ffdce3',
+    chip: 'Open notebook',
+    details: ['Planning loops', 'Tool routers', 'Memory retrieval', 'Self-correction'],
+    drawArt: (ctx) => {
+      const nodes = [
+        { x: 472, y: 120 }, { x: 536, y: 190 }, { x: 602, y: 138 },
+        { x: 660, y: 222 }, { x: 690, y: 120 }, { x: 584, y: 258 },
+      ];
+
+      ctx.strokeStyle = 'rgba(185, 126, 145, 0.34)';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
+          if (dist < 145) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.quadraticCurveTo((nodes[i].x + nodes[j].x) / 2, nodes[i].y - 18, nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      nodes.forEach((node, idx) => {
+        ctx.fillStyle = idx === 1 ? '#fff3c8' : idx % 2 ? '#c9e8cf' : '#ffd1da';
+        ctx.strokeStyle = '#a06f7c';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, idx === 1 ? 18 : 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+    },
+  },
+  {
+    title: 'HYBRID RAG DATABASE',
+    subtitle: 'Semantic search meadow',
+    tag: 'Semantic Search',
+    accent: '#7fb7aa',
+    accentSoft: '#d9f3e8',
+    chip: 'Browse index',
+    details: ['Hybrid search', 'Chunk windows', 'Reranking', 'Grounded answers'],
+    drawArt: (ctx) => {
+      ctx.strokeStyle = '#7fb7aa';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.fillStyle = '#eef9ef';
+
+      [0, 1, 2].forEach((row) => {
+        const y = 122 + row * 58;
+        ctx.beginPath();
+        ctx.roundRect(464, y, 204, 34, 17);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = '#f8c9d3';
+      [498, 566, 634].forEach((x, idx) => {
+        ctx.beginPath();
+        ctx.arc(x, 246 - idx * 42, 9, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = 'rgba(127, 183, 170, 0.42)';
+      ctx.beginPath();
+      ctx.moveTo(500, 246);
+      ctx.bezierCurveTo(548, 214, 520, 164, 566, 204);
+      ctx.bezierCurveTo(606, 238, 596, 126, 634, 162);
+      ctx.stroke();
+    },
+  },
+  {
+    title: 'FINE-TUNING & ML MODELS',
+    subtitle: 'Training recipes and model care',
+    tag: 'Deep Learning',
+    accent: '#9da8d9',
+    accentSoft: '#e5e7ff',
+    chip: 'View recipe',
+    details: ['LoRA adapters', 'Vision models', 'Quantization', 'TensorRT serving'],
+    drawArt: (ctx) => {
+      const layers = [
+        { x: 448, y: 106, w: 72, h: 122, c: '#fff0be' },
+        { x: 544, y: 84, w: 82, h: 166, c: '#e5e7ff' },
+        { x: 650, y: 116, w: 64, h: 104, c: '#d8f0dd' },
+      ];
+
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      layers.forEach((layer) => {
+        ctx.fillStyle = layer.c;
+        ctx.strokeStyle = '#8a86a6';
+        ctx.beginPath();
+        ctx.roundRect(layer.x, layer.y, layer.w, layer.h, 22);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      ctx.strokeStyle = 'rgba(138, 134, 166, 0.42)';
+      ctx.beginPath();
+      ctx.moveTo(520, 166);
+      ctx.lineTo(544, 166);
+      ctx.moveTo(626, 166);
+      ctx.lineTo(650, 166);
+      ctx.stroke();
+
+      ctx.fillStyle = '#6e688a';
+      ctx.font = '700 18px "Nunito", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('LoRA', 585, 158);
+      ctx.fillText('FP16', 585, 188);
+      ctx.textAlign = 'left';
+    },
+  },
+  {
+    title: 'WEBGL 3D INTERACTIVES',
+    subtitle: 'Soft motion and creative coding',
+    tag: 'Creative Coding',
+    accent: '#f1a86f',
+    accentSoft: '#ffe2bf',
+    chip: 'Play scene',
+    details: ['Three.js scenes', 'GLSL shaders', 'Canvas tools', 'Particle systems'],
+    drawArt: (ctx) => {
+      ctx.strokeStyle = '#f1a86f';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.ellipse(584, 170, 108, 38, Math.PI / 7, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(584, 170, 108, 38, -Math.PI / 7, 0, Math.PI * 2);
+      ctx.stroke();
+
+      [
+        { x: 500, y: 122, r: 11, c: '#ffd1da' },
+        { x: 668, y: 218, r: 13, c: '#fff0be' },
+        { x: 510, y: 218, r: 9, c: '#d9f3e8' },
+        { x: 660, y: 120, r: 10, c: '#e5e7ff' },
+        { x: 584, y: 170, r: 16, c: '#ffffff' },
+      ].forEach((p) => {
+        ctx.fillStyle = p.c;
+        ctx.strokeStyle = '#a87466';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+    },
+  },
+];
+
 export const Showroom3D: React.FC<Showroom3DProps> = ({
   activeProject,
   viewMode,
@@ -16,8 +185,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
   onCardClick,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  
-  // Refs to allow animation loop to read latest state without re-creating scene
+
   const activeProjectRef = useRef(activeProject);
   const viewModeRef = useRef(viewMode);
 
@@ -29,7 +197,6 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // --- 1. SETUP RENDERER & SCENE ---
     const width = canvasRef.current.parentElement?.clientWidth || window.innerWidth;
     const height = canvasRef.current.parentElement?.clientHeight || window.innerHeight;
 
@@ -41,435 +208,398 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.0;
+    renderer.toneMappingExposure = 1.08;
+
+    const disposableMaterials: THREE.Material[] = [];
+    const disposableGeometries: THREE.BufferGeometry[] = [];
+    const disposableTextures: THREE.Texture[] = [];
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020204);
-    scene.fog = new THREE.FogExp2(0x020204, 0.05);
+    scene.background = new THREE.Color(0xffdfd2);
+    scene.fog = new THREE.FogExp2(0xffeadf, 0.045);
 
-    // --- 2. CAMERA ---
     const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 100);
-    // Initial camera position (panoramic entrance view)
     camera.position.set(0, 2.2, 7.5);
 
-    // Camera target vectors for smooth tweening (lerp)
     const targetCamPos = new THREE.Vector3().copy(camera.position);
     const currentLookAt = new THREE.Vector3(0, 1.2, -1);
     const targetLookAt = new THREE.Vector3(0, 1.2, -1);
 
-    // --- 3. LIGHTING ---
-    const ambientLight = new THREE.AmbientLight(0x0c0d12, 1.8);
+    const ambientLight = new THREE.HemisphereLight(0xfff7df, 0xaed8cd, 2.8);
     scene.add(ambientLight);
 
-    // Neon Cyan light source (left)
-    const cyanLight = new THREE.PointLight(0x00e5ff, 5.0, 18);
-    cyanLight.position.set(-6, 4.0, -2);
-    scene.add(cyanLight);
+    const sunLight = new THREE.DirectionalLight(0xffc6a8, 2.8);
+    sunLight.position.set(-5.5, 7.5, 4);
+    scene.add(sunLight);
 
-    // Neon Magenta light source (right)
-    const magentaLight = new THREE.PointLight(0xff007f, 5.0, 18);
-    magentaLight.position.set(6, 4.0, -2);
-    scene.add(magentaLight);
+    const fillLight = new THREE.PointLight(0xd7c9ff, 1.8, 20);
+    fillLight.position.set(5, 3.8, 1);
+    scene.add(fillLight);
 
-    // Directional rim light for metallic contours
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    rimLight.position.set(0, 9, -4);
-    scene.add(rimLight);
+    const createSkyTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 96;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d')!;
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#b9c9f6');
+      gradient.addColorStop(0.38, '#f7cdd6');
+      gradient.addColorStop(0.72, '#ffe0c3');
+      gradient.addColorStop(1, '#fff6dd');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      disposableTextures.push(texture);
+      return texture;
+    };
+    scene.background = createSkyTexture();
 
-    // --- 4. GEOMETRY: SHOWROOM ENVIRONMENT ---
-    
-    // Glossy Reflective Floor
-    const floorGeo = new THREE.PlaneGeometry(40, 40);
+    const floorGeo = new THREE.PlaneGeometry(42, 42);
+    disposableGeometries.push(floorGeo);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x05070a,
-      roughness: 0.10, // Glossy reflective
-      metalness: 0.92,  // Highly metallic
+      color: 0xfff0d7,
+      roughness: 0.72,
+      metalness: 0.02,
     });
+    disposableMaterials.push(floorMat);
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = 0;
     scene.add(floor);
 
-    // Floor digital grid lines for depth
-    const gridHelper = new THREE.GridHelper(40, 30, 0x00e5ff, 0x112233);
-    gridHelper.position.y = 0.005;
-    (gridHelper.material as THREE.Material).transparent = true;
-    (gridHelper.material as THREE.Material).opacity = 0.22;
-    scene.add(gridHelper);
+    const pathGeo = new THREE.PlaneGeometry(28, 7);
+    disposableGeometries.push(pathGeo);
+    const pathTextureCanvas = document.createElement('canvas');
+    pathTextureCanvas.width = 1024;
+    pathTextureCanvas.height = 256;
+    const pathCtx = pathTextureCanvas.getContext('2d')!;
+    pathCtx.clearRect(0, 0, 1024, 256);
+    pathCtx.strokeStyle = 'rgba(242, 171, 165, 0.72)';
+    pathCtx.lineWidth = 44;
+    pathCtx.lineCap = 'round';
+    pathCtx.beginPath();
+    pathCtx.moveTo(48, 212);
+    pathCtx.bezierCurveTo(260, 82, 386, 296, 554, 130);
+    pathCtx.bezierCurveTo(716, -30, 824, 186, 982, 68);
+    pathCtx.stroke();
+    pathCtx.strokeStyle = 'rgba(255, 252, 232, 0.78)';
+    pathCtx.lineWidth = 10;
+    pathCtx.stroke();
+    const pathTexture = new THREE.CanvasTexture(pathTextureCanvas);
+    pathTexture.colorSpace = THREE.SRGBColorSpace;
+    disposableTextures.push(pathTexture);
+    const pathMat = new THREE.MeshBasicMaterial({ map: pathTexture, transparent: true, opacity: 0.8 });
+    disposableMaterials.push(pathMat);
+    const path = new THREE.Mesh(pathGeo, pathMat);
+    path.rotation.x = -Math.PI / 2;
+    path.position.set(0, 0.018, -3.2);
+    scene.add(path);
 
-    // Back Wall Panels
-    const wallGeo = new THREE.PlaneGeometry(40, 12);
-    const wallMat = new THREE.MeshStandardMaterial({
-      color: 0x040507,
-      roughness: 0.35,
-      metalness: 0.85,
+    const createBackdropTexture = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1400;
+      canvas.height = 640;
+      const ctx = canvas.getContext('2d')!;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#bfcdf7');
+      gradient.addColorStop(0.46, '#ffd0d8');
+      gradient.addColorStop(1, '#fff3ce');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#fff1b8';
+      ctx.beginPath();
+      ctx.arc(720, 368, 78, 0, Math.PI * 2);
+      ctx.fill();
+
+      const drawCloud = (x: number, y: number, scale: number) => {
+        ctx.fillStyle = 'rgba(255, 246, 233, 0.82)';
+        [0, 46, 96, 142].forEach((dx, idx) => {
+          ctx.beginPath();
+          ctx.arc(x + dx * scale, y + (idx % 2) * 12 * scale, (46 + idx * 6) * scale, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      };
+
+      drawCloud(48, 308, 1.2);
+      drawCloud(1030, 290, 1.08);
+      drawCloud(892, 182, 0.58);
+
+      ctx.fillStyle = '#d9d8b7';
+      ctx.beginPath();
+      ctx.moveTo(0, 480);
+      ctx.bezierCurveTo(210, 340, 328, 430, 496, 350);
+      ctx.bezierCurveTo(660, 276, 782, 404, 944, 344);
+      ctx.bezierCurveTo(1112, 278, 1210, 400, 1400, 310);
+      ctx.lineTo(1400, 640);
+      ctx.lineTo(0, 640);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#b9d6be';
+      ctx.beginPath();
+      ctx.moveTo(0, 528);
+      ctx.bezierCurveTo(190, 420, 340, 520, 548, 430);
+      ctx.bezierCurveTo(722, 356, 874, 516, 1044, 428);
+      ctx.bezierCurveTo(1200, 350, 1302, 470, 1400, 408);
+      ctx.lineTo(1400, 640);
+      ctx.lineTo(0, 640);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#f2aaa9';
+      ctx.beginPath();
+      ctx.roundRect(122, 406, 42, 62, 8);
+      ctx.roundRect(176, 372, 52, 96, 8);
+      ctx.roundRect(244, 426, 40, 42, 7);
+      ctx.fill();
+      ctx.fillStyle = '#f6d3a1';
+      ctx.fillRect(134, 424, 10, 12);
+      ctx.fillRect(192, 392, 10, 12);
+      ctx.fillRect(260, 440, 10, 12);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      disposableTextures.push(texture);
+      return texture;
+    };
+
+    const backdropGeo = new THREE.PlaneGeometry(32, 14.6);
+    disposableGeometries.push(backdropGeo);
+    const backdropMat = new THREE.MeshBasicMaterial({ map: createBackdropTexture(), transparent: true });
+    disposableMaterials.push(backdropMat);
+    const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
+    backdrop.position.set(0, 6.0, -10.4);
+    scene.add(backdrop);
+
+    const createDoodleTexture = (kind: 'star' | 'heart' | 'cloud', color: string) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 160;
+      canvas.height = 160;
+      const ctx = canvas.getContext('2d')!;
+      ctx.lineWidth = 7;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(128, 93, 100, 0.45)';
+      ctx.fillStyle = color;
+
+      if (kind === 'star') {
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const radius = i % 2 === 0 ? 54 : 24;
+          const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+          const x = 80 + Math.cos(angle) * radius;
+          const y = 80 + Math.sin(angle) * radius;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (kind === 'heart') {
+        ctx.beginPath();
+        ctx.moveTo(80, 124);
+        ctx.bezierCurveTo(20, 78, 30, 30, 70, 44);
+        ctx.bezierCurveTo(80, 18, 130, 32, 126, 72);
+        ctx.bezierCurveTo(122, 96, 104, 108, 80, 124);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(55, 88, 28, Math.PI, 0);
+        ctx.arc(82, 72, 35, Math.PI, 0);
+        ctx.arc(116, 90, 24, Math.PI, 0);
+        ctx.lineTo(140, 108);
+        ctx.lineTo(30, 108);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      disposableTextures.push(texture);
+      return texture;
+    };
+
+    const doodles = [
+      { kind: 'star' as const, color: '#fff0a8', x: -5.8, y: 4.2, z: -5.8, s: 0.74 },
+      { kind: 'heart' as const, color: '#ffc4ce', x: -2.9, y: 4.9, z: -6.8, s: 0.52 },
+      { kind: 'cloud' as const, color: '#fff7ea', x: 0.1, y: 3.9, z: -7.2, s: 1.0 },
+      { kind: 'star' as const, color: '#ffe5a4', x: 3.2, y: 4.7, z: -6.4, s: 0.54 },
+      { kind: 'heart' as const, color: '#f8b7c4', x: 6.2, y: 4.1, z: -6.0, s: 0.46 },
+    ];
+
+    const doodleSprites: THREE.Sprite[] = [];
+    doodles.forEach((doodle) => {
+      const material = new THREE.SpriteMaterial({
+        map: createDoodleTexture(doodle.kind, doodle.color),
+        transparent: true,
+        opacity: 0.92,
+      });
+      disposableMaterials.push(material);
+      const sprite = new THREE.Sprite(material);
+      sprite.position.set(doodle.x, doodle.y, doodle.z);
+      sprite.scale.set(doodle.s, doodle.s, 1);
+      scene.add(sprite);
+      doodleSprites.push(sprite);
     });
-    const backWall = new THREE.Mesh(wallGeo, wallMat);
-    backWall.position.set(0, 6, -9);
-    scene.add(backWall);
 
-    // Architectural Symmetrical Columns (Dark Metal)
-    const columnGeo = new THREE.BoxGeometry(1.0, 12, 1.0);
-    const columnMat = new THREE.MeshStandardMaterial({
-      color: 0x080a0e,
-      roughness: 0.18,
-      metalness: 0.85,
-    });
+    const drawRoundedRect = (
+      ctx: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      r: number,
+    ) => {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    };
 
-    const columns: THREE.Mesh[] = [];
-    const colPositions = [-9, -4.5, 4.5, 9];
-    colPositions.forEach((xPos) => {
-      const col = new THREE.Mesh(columnGeo, columnMat);
-      col.position.set(xPos, 6, -8.5);
-      scene.add(col);
-      columns.push(col);
-    });
-
-    // Glowing Neon Crossed Tubes on the back wall (Matching the mockup)
-    const tubeGeo = new THREE.CylinderGeometry(0.05, 0.05, 14, 8);
-    const cyanTubeMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-    const magentaTubeMat = new THREE.MeshBasicMaterial({ color: 0xff007f });
-
-    // Crossed lines in center-right back wall
-    const cyanCrossTube = new THREE.Mesh(tubeGeo, cyanTubeMat);
-    cyanCrossTube.position.set(3.5, 4.5, -8.8);
-    cyanCrossTube.rotation.z = Math.PI / 4.2;
-    scene.add(cyanCrossTube);
-
-    const magentaCrossTube = new THREE.Mesh(tubeGeo, magentaTubeMat);
-    magentaCrossTube.position.set(3.5, 4.5, -8.8);
-    magentaCrossTube.rotation.z = -Math.PI / 4.2;
-    scene.add(magentaCrossTube);
-
-    // Symmetrical diagonal neon strips on the sides
-    const leftNeonStrip = new THREE.Mesh(tubeGeo, cyanTubeMat);
-    leftNeonStrip.position.set(-8, 4.5, -8.8);
-    leftNeonStrip.rotation.z = -Math.PI / 5.5;
-    scene.add(leftNeonStrip);
-
-    const rightNeonStrip = new THREE.Mesh(tubeGeo, magentaTubeMat);
-    rightNeonStrip.position.set(8, 4.5, -8.8);
-    rightNeonStrip.rotation.z = Math.PI / 5.5;
-    scene.add(rightNeonStrip);
-
-    // --- 5. FLOATING 3D PROJECT CARDS WITH PROCEDURAL GRAPHICS ---
     const createRichCardTexture = (index: number) => {
       const canvas = document.createElement('canvas');
       canvas.width = 768;
       canvas.height = 512;
       const ctx = canvas.getContext('2d')!;
+      const config = projectCardConfigs[index];
 
-      // Glassmorphic translucent dark background
-      ctx.fillStyle = 'rgba(4, 5, 8, 0.95)';
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#fffaf0');
+      gradient.addColorStop(0.45, config.accentSoft);
+      gradient.addColorStop(1, '#ddecf6');
+      ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Card configurations
-      const configs = [
-        {
-          title: "AI AGENTS WORKFLOW",
-          subtitle: "MULTI-AGENT ENGINE CORE",
-          tag: "AGENTIC AI SYSTEM",
-          color: "#ff007f", // Magenta
-          colorGlow: "rgba(255, 0, 127, 0.4)",
-          btnText: "LAUNCH ENGINE >",
-          drawArt: () => {
-            // Neural net nodes and coordinates
-            ctx.strokeStyle = 'rgba(255, 0, 127, 0.15)';
-            ctx.lineWidth = 1;
-            const nodes = [
-              { x: 380, y: 120 }, { x: 440, y: 220 }, { x: 500, y: 150 }, 
-              { x: 580, y: 240 }, { x: 620, y: 110 }, { x: 690, y: 200 }
-            ];
-            // Lines
-            for (let i = 0; i < nodes.length; i++) {
-              for (let j = i + 1; j < nodes.length; j++) {
-                const dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y);
-                if (dist < 180) {
-                  ctx.beginPath();
-                  ctx.moveTo(nodes[i].x, nodes[i].y);
-                  ctx.lineTo(nodes[j].x, nodes[j].y);
-                  ctx.stroke();
-                }
-              }
-            }
-            // Glow Nodes
-            nodes.forEach((n, i) => {
-              ctx.beginPath();
-              ctx.arc(n.x, n.y, i % 2 === 0 ? 6 : 4, 0, Math.PI * 2);
-              ctx.fillStyle = i === 1 ? '#ffffff' : '#ff007f';
-              ctx.shadowColor = '#ff007f';
-              ctx.shadowBlur = 10;
-              ctx.fill();
-              ctx.shadowBlur = 0;
-            });
-          }
-        },
-        {
-          title: "HYBRID RAG DATABASE",
-          subtitle: "SEMANTIC DOCUMENT RETRIEVAL",
-          tag: "VECTOR SEARCH NETWORK",
-          color: "#00e5ff", // Cyan
-          colorGlow: "rgba(0, 229, 255, 0.4)",
-          btnText: "ACCESS DATABASE >",
-          drawArt: () => {
-            // Coordinate grid lattices and bar metrics
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
-            ctx.lineWidth = 1;
-            // Draw a futuristic semantic index chart
-            ctx.beginPath();
-            ctx.arc(540, 170, 60, 0, Math.PI * 2);
-            ctx.stroke();
-            
-            ctx.beginPath();
-            ctx.arc(540, 170, 30, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Intersecting rays
-            ctx.fillStyle = '#00e5ff';
-            ctx.shadowColor = '#00e5ff';
-            ctx.shadowBlur = 8;
-            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-              const rx = 540 + Math.cos(a) * 60;
-              const ry = 170 + Math.sin(a) * 60;
-              ctx.beginPath();
-              ctx.arc(rx, ry, 3, 0, Math.PI * 2);
-              ctx.fill();
-            }
-            
-            // Vertical digital bars
-            ctx.fillStyle = 'rgba(0, 229, 255, 0.1)';
-            ctx.shadowBlur = 0;
-            const barData = [60, 120, 80, 140, 110];
-            barData.forEach((h, idx) => {
-              ctx.fillRect(630 + idx * 16, 230 - h, 10, h);
-              ctx.fillStyle = '#00e5ff';
-              ctx.fillRect(630 + idx * 16, 230 - h, 10, 3);
-              ctx.fillStyle = 'rgba(0, 229, 255, 0.1)';
-            });
-          }
-        },
-        {
-          title: "PEFT MODEL FINE-TUNE",
-          subtitle: "QUANTIZED COGNITIVE INTELLIGENCE",
-          tag: "DEEP LEARNING PIPELINE",
-          color: "#00e5ff", // Cyan
-          colorGlow: "rgba(0, 229, 255, 0.4)",
-          btnText: "RUN WORKFLOW >",
-          drawArt: () => {
-            // Horizontal neural model layer boxes and parameter blocks
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(400, 120, 80, 80);
-            ctx.strokeRect(520, 100, 80, 120);
-            ctx.strokeRect(640, 120, 80, 80);
-            
-            // Connection paths
-            ctx.beginPath();
-            ctx.moveTo(480, 160);
-            ctx.lineTo(520, 160);
-            ctx.moveTo(600, 160);
-            ctx.lineTo(640, 160);
-            ctx.stroke();
-
-            // Inner glowing values
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '600 10px "Orbitron", sans-serif';
-            ctx.fillText("Llama-3", 440, 162);
-            ctx.fillText("PEFT Adapter", 560, 162);
-            ctx.fillText("TensorRT", 680, 162);
-
-            ctx.fillStyle = '#00e5ff';
-            ctx.shadowColor = '#00e5ff';
-            ctx.shadowBlur = 8;
-            ctx.fillText("LoRA", 560, 130);
-            ctx.fillText("FP16", 560, 190);
-            ctx.shadowBlur = 0;
-          }
-        },
-        {
-          title: "WEBGL 3D INTERACTIVES",
-          subtitle: "HARDWARE-ACCELERATED GRAPHICS",
-          tag: "GPU SHADER LAB",
-          color: "#ff007f", // Magenta
-          colorGlow: "rgba(255, 0, 127, 0.4)",
-          btnText: "EXECUTE PROTOTYPE >",
-          drawArt: () => {
-            // Vector orbits / particle vortex
-            ctx.strokeStyle = 'rgba(255, 0, 127, 0.15)';
-            ctx.lineWidth = 1;
-            
-            // Render beautiful overlapping planetary ellipses representing shader paths
-            ctx.beginPath();
-            ctx.ellipse(540, 160, 100, 35, Math.PI / 6, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.ellipse(540, 160, 100, 35, -Math.PI / 6, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Particle nodes
-            ctx.fillStyle = '#ff007f';
-            ctx.shadowColor = '#ff007f';
-            ctx.shadowBlur = 10;
-            const points = [
-              { x: 460, y: 110 }, { x: 620, y: 210 }, 
-              { x: 450, y: 200 }, { x: 610, y: 110 }, { x: 540, y: 160 }
-            ];
-            points.forEach((p, idx) => {
-              ctx.beginPath();
-              ctx.arc(p.x, p.y, idx === 4 ? 6 : 4, 0, Math.PI * 2);
-              ctx.fillStyle = idx === 4 ? '#ffffff' : '#ff007f';
-              ctx.fill();
-            });
-            ctx.shadowBlur = 0;
-          }
-        }
-      ];
-
-      const c = configs[index];
-
-      // --- DECORATIVE HUD DETAILS ---
-      // Outer digital corner bezels
-      ctx.strokeStyle = c.color;
-      ctx.lineWidth = 4;
-      const bSize = 30;
-      // Top-Left
-      ctx.beginPath();
-      ctx.moveTo(12, 12 + bSize); ctx.lineTo(12, 12); ctx.lineTo(12 + bSize, 12);
-      ctx.stroke();
-      // Top-Right
-      ctx.beginPath();
-      ctx.moveTo(canvas.width - 12, 12 + bSize); ctx.lineTo(canvas.width - 12, 12); ctx.lineTo(canvas.width - 12 - bSize, 12);
-      ctx.stroke();
-      // Bottom-Left
-      ctx.beginPath();
-      ctx.moveTo(12, canvas.height - 12 - bSize); ctx.lineTo(12, canvas.height - 12); ctx.lineTo(12 + bSize, canvas.height - 12);
-      ctx.stroke();
-      // Bottom-Right
-      ctx.beginPath();
-      ctx.moveTo(canvas.width - 12, canvas.height - 12 - bSize); ctx.lineTo(canvas.width - 12, canvas.height - 12); ctx.lineTo(canvas.width - 12 - bSize, canvas.height - 12);
-      ctx.stroke();
-
-      // Border bounds line
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
-
-      // Fine grid background details
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
-      for (let i = 24; i < canvas.width; i += 24) {
-        ctx.beginPath(); ctx.moveTo(i, 12); ctx.lineTo(i, canvas.height - 12); ctx.stroke();
-      }
-      for (let j = 24; j < canvas.height; j += 24) {
-        ctx.beginPath(); ctx.moveTo(12, j); ctx.lineTo(canvas.width - 12, j); ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.42)';
+      for (let i = 0; i < 18; i++) {
+        const x = (i * 67 + index * 31) % canvas.width;
+        const y = 36 + ((i * 43) % 420);
+        ctx.beginPath();
+        ctx.arc(x, y, 2 + (i % 3), 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      // --- TEXT LABELS (Left Side) ---
-      // Category Tag
-      ctx.fillStyle = c.color;
-      ctx.font = '800 12px "Orbitron", sans-serif';
-      ctx.shadowColor = c.colorGlow;
-      ctx.shadowBlur = 6;
-      ctx.fillText(c.tag, 42, 65);
-      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(134, 99, 105, 0.25)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([10, 16]);
+      ctx.beginPath();
+      ctx.moveTo(396, 82);
+      ctx.bezierCurveTo(490, 12, 558, 92, 650, 54);
+      ctx.bezierCurveTo(700, 36, 728, 78, 708, 124);
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Project Title (Large Bold White - Apechain Mockup style)
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 38px "Orbitron", sans-serif';
-      ctx.fillText(c.title, 42, 115);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
+      ctx.strokeStyle = 'rgba(128, 93, 100, 0.18)';
+      ctx.lineWidth = 2;
+      drawRoundedRect(ctx, 28, 28, canvas.width - 56, canvas.height - 56, 36);
+      ctx.fill();
+      ctx.stroke();
 
-      // Subtitle
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '600 12px "Orbitron", sans-serif';
-      ctx.letterSpacing = '1px';
-      ctx.fillText(c.subtitle, 42, 145);
+      ctx.fillStyle = config.accentSoft;
+      ctx.strokeStyle = config.accent;
+      ctx.lineWidth = 3;
+      drawRoundedRect(ctx, 48, 48, 142, 32, 16);
+      ctx.fill();
+      ctx.stroke();
 
-      // System Log details (Cyber text details)
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.font = '500 12px "Inter", sans-serif';
-      ctx.letterSpacing = '0px';
-      
-      const detailsText = [
-        "SYSTEM ENGINES BOUND TO HW ACCELERATORS",
-        "INPUT STREAM PORT: SECURE RAW SHELL (SSL)",
-        "STATUS METRICS CORRELATION: OPERATIONAL",
-        "COGNITIVE LATENCY: CRITICAL SECURE GROUNDED"
-      ];
-      detailsText.forEach((t, i) => {
-        ctx.fillStyle = c.color;
-        ctx.fillText("▶", 42, 200 + i * 22);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.fillText(t, 60, 200 + i * 22);
+      ctx.fillStyle = '#665260';
+      ctx.font = '800 15px "Nunito", sans-serif';
+      ctx.fillText(config.tag.toUpperCase(), 64, 69);
+
+      ctx.fillStyle = '#4f465b';
+      ctx.font = '900 35px "Nunito", sans-serif';
+      const titleWords = config.title.split(' ');
+      const firstLine = titleWords.slice(0, 2).join(' ');
+      const secondLine = titleWords.slice(2).join(' ');
+      ctx.fillText(firstLine, 50, 126);
+      if (secondLine) ctx.fillText(secondLine, 50, 166);
+
+      ctx.fillStyle = '#7a7184';
+      ctx.font = '700 18px "Nunito", sans-serif';
+      ctx.fillText(config.subtitle, 52, 204);
+
+      ctx.font = '700 17px "Nunito", sans-serif';
+      config.details.forEach((detail, i) => {
+        const y = 252 + i * 34;
+        ctx.fillStyle = ['#ffd1da', '#d8f0dd', '#fff0be', '#e5e7ff'][i];
+        ctx.strokeStyle = 'rgba(128, 93, 100, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(62, y - 5, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#62596d';
+        ctx.fillText(detail, 84, y);
       });
 
-      // --- DYNAMIC ART ILLUSTRATION (Right Side) ---
-      c.drawArt();
+      config.drawArt(ctx);
 
-      // --- LAUNCH WHITE PILL BUTTON (Bottom Left - Apechain style) ---
-      const btnX = 42;
-      const btnY = 380;
-      const btnW = 210;
-      const btnH = 46;
-      const btnRad = 23;
-
-      // Draw shiny white button
       ctx.fillStyle = '#ffffff';
-      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
-      ctx.shadowBlur = 12;
-      
-      ctx.beginPath();
-      ctx.roundRect(btnX, btnY, btnW, btnH, btnRad);
+      ctx.strokeStyle = config.accent;
+      ctx.lineWidth = 3;
+      drawRoundedRect(ctx, 50, 402, 212, 48, 24);
       ctx.fill();
-      ctx.shadowBlur = 0;
+      ctx.stroke();
 
-      // Button Text
-      ctx.fillStyle = '#030306';
-      ctx.font = '900 12px "Orbitron", sans-serif';
+      ctx.fillStyle = '#51475c';
+      ctx.font = '900 16px "Nunito", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(c.btnText, btnX + btnW / 2, btnY + btnH / 2);
-
-      // Reset textAlign
+      ctx.fillText(config.chip, 156, 426);
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
 
-      return new THREE.CanvasTexture(canvas);
+      ctx.fillStyle = config.accent;
+      ctx.beginPath();
+      ctx.arc(688, 410, 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fffaf0';
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 === 0 ? 18 : 8;
+        const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+        const x = 688 + Math.cos(angle) * radius;
+        const y = 410 + Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
     };
 
-    // Enlarged dynamic project cards for the 3D cover flow (Apechain width aspect)
-    // Larger cards: 3.5 width, 2.3 height
     const cardGeom = new THREE.BoxGeometry(3.5, 2.3, 0.06);
+    disposableGeometries.push(cardGeom);
     const cards: THREE.Mesh[] = [];
-
-    // Store card base textures for reference
-    const cardTextures: THREE.CanvasTexture[] = [];
 
     for (let i = 0; i < 4; i++) {
       const richTex = createRichCardTexture(i);
-      cardTextures.push(richTex);
+      disposableTextures.push(richTex);
 
-      // Glowing basic material to ensure crisp, self-luminous retro cyber-monitor text and visuals
       const cardMat = new THREE.MeshBasicMaterial({
         map: richTex,
         transparent: true,
-        opacity: 0.96,
+        opacity: 0.98,
         side: THREE.DoubleSide,
       });
+      disposableMaterials.push(cardMat);
 
       const card = new THREE.Mesh(cardGeom, cardMat);
-      
-      // Initial offset positioning to spread them out on loading
       card.position.set((i - 1.5) * 4.0, 1.1, -1.0);
       scene.add(card);
       cards.push(card);
     }
 
-    // --- 6. INTERACTION LOGIC: RAYCASTING ---
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let hoveredCardIdx: number | null = null;
-
-    // Tracks mouse position for parallax drift
     const mouseParallax = { x: 0, y: 0 };
 
     const handleMouseMove = (event: MouseEvent) => {
@@ -477,11 +607,9 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-      // Parallax values
       mouseParallax.x = mouse.x;
       mouseParallax.y = mouse.y;
 
-      // Card Raycasting
       raycaster.setFromCamera(mouse, camera);
       const intersects = raycaster.intersectObjects(cards);
 
@@ -494,11 +622,9 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
           hoveredCardIdx = intersectedIdx;
           document.body.style.cursor = 'pointer';
         }
-      } else {
-        if (hoveredCardIdx !== null) {
-          hoveredCardIdx = null;
-          document.body.style.cursor = 'default';
-        }
+      } else if (hoveredCardIdx !== null) {
+        hoveredCardIdx = null;
+        document.body.style.cursor = 'default';
       }
     };
 
@@ -509,7 +635,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       if (intersects.length > 0) {
         const clickedCard = intersects[0].object as THREE.Mesh;
         const clickedIdx = cards.indexOf(clickedCard);
-        
+
         soundManager.playClick();
         onCardClick(clickedIdx);
       }
@@ -518,124 +644,96 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mousedown', handleMouseDown);
 
-    // --- 7. ANIMATION LOOP ---
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
     let animationFrameId: number;
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
-      const time = clock.getElapsedTime();
-
-      // Read active state from refs
+      const time = (performance.now() - startTime) / 1000;
       const curActiveProject = activeProjectRef.current;
       const curViewMode = viewModeRef.current;
 
-      // --- 1. COVER-FLOW 3D PERSPECTIVE CAROUSEL ALIGNMENTS ---
+      doodleSprites.forEach((sprite, idx) => {
+        sprite.position.y += Math.sin(time * 0.8 + idx) * 0.0009;
+        sprite.material.rotation = Math.sin(time * 0.35 + idx) * 0.08;
+      });
+
       cards.forEach((card, idx) => {
-        // Calculate dynamic offset from active project, wrapping around a 4-card sequence
         let offset = idx - curActiveProject;
         if (offset < -2) offset += 4;
         if (offset > 2) offset -= 4;
 
-        let targetX = 0;
-        let targetY = 1.1;
-        let targetZ = 0;
-        let targetRotY = 0;
-        let targetScale = 1.0;
+        let targetX: number;
+        const targetY = 1.1;
+        let targetZ: number;
+        let targetRotY: number;
+        let targetScale: number;
 
         if (curViewMode === 'explore') {
-          // EXPLORE MODE: Curved static array in space
           targetX = (idx - 1.5) * 3.4;
           targetZ = -Math.abs(targetX) * 0.18 - 1.5;
           targetRotY = -targetX * 0.08;
           targetScale = 1.0;
+        } else if (offset === 0) {
+          targetX = -0.55;
+          targetZ = 1.25;
+          targetRotY = -0.05;
+          targetScale = 1.15;
+        } else if (offset === -1 || offset === 3) {
+          targetX = -3.5;
+          targetZ = -0.3;
+          targetRotY = 0.52;
+          targetScale = 0.82;
+        } else if (offset === 1 || offset === -3) {
+          targetX = 2.4;
+          targetZ = -0.3;
+          targetRotY = -0.52;
+          targetScale = 0.82;
         } else {
-          // FOCUS MODE: COVER FLOW CAROUSEL (Enlarged Active card center, Neighbors offset and rotated back)
-          if (offset === 0) {
-            // Active Center Card: large, facing camera directly, pulled forward
-            targetX = -0.55; // Offset slightly to the left to balance the right sidebar console!
-            targetZ = 1.25;
-            targetRotY = -0.05; // Gentle tilt
-            targetScale = 1.15;
-          } else if (offset === -1 || offset === 3) {
-            // Card on Left: shifted left, tilted deeply inwards towards center
-            targetX = -3.5;
-            targetZ = -0.3;
-            targetRotY = 0.52; // Tilted inwards
-            targetScale = 0.82;
-          } else if (offset === 1 || offset === -3) {
-            // Card on Right: shifted right, tilted deeply inwards towards center
-            targetX = 2.4;
-            targetZ = -0.3;
-            targetRotY = -0.52; // Tilted inwards
-            targetScale = 0.82;
-          } else {
-            // Card behind / opposite: pushed far back, small scale
-            targetX = offset < 0 ? -4.5 : 4.5;
-            targetZ = -2.2;
-            targetRotY = offset < 0 ? 0.6 : -0.6;
-            targetScale = 0.55;
-          }
+          targetX = offset < 0 ? -4.5 : 4.5;
+          targetZ = -2.2;
+          targetRotY = offset < 0 ? 0.6 : -0.6;
+          targetScale = 0.55;
         }
 
-        // Floating sine animation on Y axis
-        const floatFreq = 1.1;
-        const floatAmp = 0.04;
-        const floatOffset = Math.sin(time * floatFreq + idx * 1.5) * floatAmp;
+        const floatOffset = Math.sin(time * 1.1 + idx * 1.5) * 0.055;
         const finalTargetY = targetY + floatOffset;
+        const targetColorVal = idx === curActiveProject || hoveredCardIdx === idx ? 0xffffff : 0xd7d3e8;
 
-        // Dynamic Focal Brightness Tinting (Active & Hovered cards are full bright, others are dimmed)
-        let targetColorVal = 0x6e7682; // Dimmed color for background cards
-        if (idx === curActiveProject || hoveredCardIdx === idx) {
-          targetColorVal = 0xffffff; // Full brilliant original canvas colors
-        }
-
-        // Apply smooth interpolation (Lerp) to positions, rotations, and scales
         card.position.x = THREE.MathUtils.lerp(card.position.x, targetX, 0.07);
         card.position.y = THREE.MathUtils.lerp(card.position.y, finalTargetY, 0.07);
         card.position.z = THREE.MathUtils.lerp(card.position.z, targetZ, 0.07);
-        
         card.rotation.y = THREE.MathUtils.lerp(card.rotation.y, targetRotY, 0.07);
-        
-        const currentSc = card.scale.x;
-        const nextSc = THREE.MathUtils.lerp(currentSc, targetScale, 0.07);
-        card.scale.set(nextSc, nextSc, nextSc);
 
-        // Apply color glow/tint modifications on basic materials
+        const nextScale = THREE.MathUtils.lerp(card.scale.x, targetScale, 0.07);
+        card.scale.set(nextScale, nextScale, nextScale);
+
         const mat = card.material as THREE.MeshBasicMaterial;
         mat.color.lerp(new THREE.Color(targetColorVal), 0.08);
       });
 
-      // --- 2. CAMERA TWEENING CALCULATIONS ---
       if (curViewMode === 'explore') {
-        // Panoramic pan: Orbiting coordinate + mouse parallax drift
         const targetX = Math.sin(time * 0.08) * 1.0 + mouseParallax.x * 0.5;
         const targetY = 2.1 + Math.cos(time * 0.08) * 0.15 + mouseParallax.y * 0.25;
         const targetZ = 6.4 + Math.sin(time * 0.04) * 0.3;
-        
+
         targetCamPos.set(targetX, targetY, targetZ);
         targetLookAt.set(0, 1.1, -1);
       } else {
-        // Focus mode: Camera sits at a gorgeous panoramic viewpoint, letting the Cover Flow carousel center the projects
-        // Positioned slightly higher and tilted down looking at the centered active card
         const targetX = mouseParallax.x * 0.25;
         const targetY = 1.7 + mouseParallax.y * 0.15;
-        const targetZ = 4.4; // Tighter focus
+        const targetZ = 4.4;
 
         targetCamPos.set(targetX, targetY, targetZ);
-        // Look towards the center project region
         targetLookAt.set(-0.5, 1.1, 0.5);
       }
 
-      // Smooth camera interpolation
       camera.position.lerp(targetCamPos, 0.06);
       currentLookAt.lerp(targetLookAt, 0.06);
       camera.lookAt(currentLookAt);
 
-      // Render scene
       renderer.render(scene, camera);
 
-      // --- 3. EMIT CAMERA DATA TO HUD ---
       const dirVector = new THREE.Vector3();
       camera.getWorldDirection(dirVector);
       const yawAngle = Math.atan2(dirVector.x, dirVector.z);
@@ -647,7 +745,6 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
     animate();
 
-    // --- 8. RESIZE HANDLING ---
     const handleResize = () => {
       if (!canvasRef.current || !canvasRef.current.parentElement) return;
       const w = canvasRef.current.parentElement.clientWidth;
@@ -661,32 +758,16 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
     window.addEventListener('resize', handleResize);
 
-    // --- 9. CLEANUP ---
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
-      
-      floorGeo.dispose();
-      floorMat.dispose();
-      gridHelper.dispose();
-      wallGeo.dispose();
-      wallMat.dispose();
-      columnGeo.dispose();
-      columnMat.dispose();
-      tubeGeo.dispose();
-      cyanTubeMat.dispose();
-      magentaTubeMat.dispose();
-      
-      cardGeom.dispose();
-      cards.forEach((card) => {
-        const mat = card.material as THREE.MeshPhysicalMaterial;
-        mat.map?.dispose();
-        mat.dispose();
-      });
-      cardTextures.forEach((tex) => tex.dispose());
+      document.body.style.cursor = 'default';
 
+      disposableGeometries.forEach((geometry) => geometry.dispose());
+      disposableMaterials.forEach((material) => material.dispose());
+      disposableTextures.forEach((texture) => texture.dispose());
       renderer.dispose();
     };
   }, [onCameraChange, onCardClick]);
@@ -697,4 +778,5 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     </div>
   );
 };
+
 export default Showroom3D;

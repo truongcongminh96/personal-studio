@@ -1,6 +1,10 @@
 /**
  * SoundManager - Pure Web Audio API Synthesizer for Cyberpunk Ambient Hum & SFX
  */
+type WindowWithLegacyAudio = Window & typeof globalThis & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
 class SoundManager {
   private ctx: AudioContext | null = null;
   
@@ -21,7 +25,8 @@ class SoundManager {
   public init() {
     if (!this.ctx) {
       // Support legacy webkitAudioContext
-      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioCtxClass = window.AudioContext || (window as WindowWithLegacyAudio).webkitAudioContext;
+      if (!AudioCtxClass) return;
       this.ctx = new AudioCtxClass();
     }
     
@@ -112,9 +117,14 @@ class SoundManager {
       // Stop nodes after fade complete
       setTimeout(() => {
         if (!this.ambientActive) {
-          try { o1?.stop(); } catch(e) {}
-          try { o2?.stop(); } catch(e) {}
-          try { lf?.stop(); } catch(e) {}
+          const nodes = [o1, o2, lf];
+          nodes.forEach((node) => {
+            try {
+              node?.stop();
+            } catch {
+              // Already stopped nodes can throw in some browsers.
+            }
+          });
         }
       }, 900);
 
@@ -159,7 +169,7 @@ class SoundManager {
       osc.start(now);
       osc.stop(now + 0.12);
 
-    } catch (e) {
+    } catch {
       // Fail silently
     }
   }
@@ -198,7 +208,7 @@ class SoundManager {
       osc.start(now);
       osc.stop(now + 0.2);
 
-    } catch (e) {
+    } catch {
       // Fail silently
     }
   }
