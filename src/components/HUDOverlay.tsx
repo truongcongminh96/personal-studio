@@ -141,7 +141,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             </button>
           </nav>
 
-          <div
+          <div 
             className={`sound-control interactive ${soundEnabled ? 'active' : ''}`}
             onClick={onToggleSound}
           >

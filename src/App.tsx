@@ -57,7 +57,10 @@ function App() {
     >
       {/* Cinematic Looping Video Background Layer */}
       <DreamVideoBackground
-        src="/videos/dream-lab-background.mp4"
+        sources={[
+          '/videos/dream-lab-background.mp4',
+          '/videos/dream-lab-jouney.mp4',
+        ]}
         opacity={1}
         soundEnabled={videoSoundEnabled}
       />

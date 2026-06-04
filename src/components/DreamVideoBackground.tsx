@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 
 interface DreamVideoBackgroundProps {
   src?: string;
+  sources?: string[];
   opacity?: number;
   soundEnabled?: boolean;
 }
@@ -12,14 +13,19 @@ const getPrefersReducedMotion = () =>
 
 export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
   src = '/videos/dream-lab-background.mp4',
+  sources,
   opacity = 1,
   soundEnabled = true,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoSources = sources?.length ? sources : [src];
+  const sourceCount = videoSources.length;
+  const [activeSourceIndex, setActiveSourceIndex] = useState(0);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(getPrefersReducedMotion);
   const [videoError, setVideoError] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mountOpacity, setMountOpacity] = useState(0);
+  const activeSrc = videoSources[activeSourceIndex % sourceCount];
 
   // Check for reduced motion preference
   useEffect(() => {
@@ -39,7 +45,6 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
   useEffect(() => {
     if (prefersReducedMotion || videoError) return;
 
-    // Start fading to target opacity
     const timer = setTimeout(() => {
       setMountOpacity(opacity);
     }, 50);
@@ -63,7 +68,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
         console.warn('Muted video autoplay failed:', playErr);
       });
     });
-  }, [soundEnabled, prefersReducedMotion, videoError]);
+  }, [soundEnabled, prefersReducedMotion, videoError, activeSrc]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -86,7 +91,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
     };
   }, [soundEnabled, prefersReducedMotion, videoError]);
 
-  // Seamless manual loop logic (using requestAnimationFrame & refs)
+  // Seamless manual playlist logic (using requestAnimationFrame & refs)
   useEffect(() => {
     const video = videoRef.current;
     if (!video || prefersReducedMotion || videoError) return;
@@ -99,18 +104,21 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
         const current = video.currentTime;
         const duration = video.duration;
 
-        // Manual fade out in the last 0.5 seconds of the video
         if (duration - current < 0.5) {
           const progress = (duration - current) / 0.5;
-          // Scale current opacity from target opacity down to 0
           video.style.opacity = String(opacity * Math.max(0, progress));
 
-          // Trigger loop slightly before the exact end to avoid screen blink
           if (duration - current <= 0.08 && !isTransitioning) {
             isTransitioning = true;
             video.style.opacity = '0';
-            
+
             setTimeout(() => {
+              if (sourceCount > 1) {
+                setActiveSourceIndex((index) => (index + 1) % sourceCount);
+                isTransitioning = false;
+                return;
+              }
+
               video.currentTime = 0;
               video.play()
                 .then(() => {
@@ -122,16 +130,14 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
                 });
             }, 100);
           }
+        } else if (current < 0.5) {
+          const progress = current / 0.5;
+          video.style.opacity = String(opacity * progress);
         } else {
-          // If we just loop-reset, fade back in over the first 0.5 seconds
-          if (current < 0.5) {
-            const progress = current / 0.5;
-            video.style.opacity = String(opacity * progress);
-          } else {
-            video.style.opacity = String(opacity);
-          }
+          video.style.opacity = String(opacity);
         }
       }
+
       animationFrameId = requestAnimationFrame(checkLoop);
     };
 
@@ -139,7 +145,14 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
       if (!isTransitioning) {
         isTransitioning = true;
         video.style.opacity = '0';
+
         setTimeout(() => {
+          if (sourceCount > 1) {
+            setActiveSourceIndex((index) => (index + 1) % sourceCount);
+            isTransitioning = false;
+            return;
+          }
+
           video.currentTime = 0;
           video.play()
             .then(() => {
@@ -160,7 +173,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
       cancelAnimationFrame(animationFrameId);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [opacity, prefersReducedMotion, videoError, isLoaded]);
+  }, [opacity, prefersReducedMotion, videoError, isLoaded, sourceCount]);
 
   const handleVideoLoad = () => {
     setIsLoaded(true);
@@ -168,6 +181,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
     const video = videoRef.current;
     if (!video) return;
 
+    setMountOpacity(opacity);
     video.volume = 0.72;
     video.muted = !soundEnabled;
     video.play().catch((err) => {
@@ -188,10 +202,9 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
     setVideoError(true);
   };
 
-  // If user prefers reduced motion or video fails to load, render fallback static gradient background
   if (prefersReducedMotion || videoError) {
     return (
-      <div 
+      <div
         aria-hidden="true"
         style={{
           position: 'absolute',
@@ -205,9 +218,9 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
   }
 
   return (
-    <div 
+    <div
       aria-hidden="true"
-      style={{ 
+      style={{
         position: 'absolute',
         inset: 0,
         zIndex: 0,
@@ -218,7 +231,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
     >
       <video
         ref={videoRef}
-        src={src}
+        src={activeSrc}
         autoPlay
         muted={!soundEnabled}
         playsInline
@@ -238,7 +251,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
       />
 
       {/* Layer 1: soft white veil */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           inset: 0,
@@ -248,7 +261,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
       />
 
       {/* Layer 2: vertical linear gradient overlay */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           inset: 0,
@@ -258,7 +271,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
       />
 
       {/* Optional: Soft vignette / blur layer */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           inset: 0,
