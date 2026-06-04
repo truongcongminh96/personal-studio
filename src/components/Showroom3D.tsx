@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { soundManager } from './SoundManager';
 
 interface Showroom3DProps {
   activeProject: number;
@@ -203,8 +202,9 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
       antialias: true,
-      alpha: false,
+      alpha: true,
     });
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -215,8 +215,9 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     const disposableTextures: THREE.Texture[] = [];
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffdfd2);
+    // scene.background = new THREE.Color(0xffdfd2);
     scene.fog = new THREE.FogExp2(0xffeadf, 0.045);
+    const showDecorativeBackground = false;
 
     const camera = new THREE.PerspectiveCamera(58, width / height, 0.1, 100);
     camera.position.set(0, 2.2, 7.5);
@@ -236,6 +237,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     fillLight.position.set(5, 3.8, 1);
     scene.add(fillLight);
 
+    /*
     const createSkyTexture = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 96;
@@ -253,7 +255,8 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       disposableTextures.push(texture);
       return texture;
     };
-    scene.background = createSkyTexture();
+    // scene.background = createSkyTexture();
+    */
 
     const floorGeo = new THREE.PlaneGeometry(42, 42);
     disposableGeometries.push(floorGeo);
@@ -261,12 +264,14 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       color: 0xfff0d7,
       roughness: 0.72,
       metalness: 0.02,
+      transparent: true,
+      opacity: 0.46,
     });
     disposableMaterials.push(floorMat);
     const floor = new THREE.Mesh(floorGeo, floorMat);
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = 0;
-    scene.add(floor);
+    if (showDecorativeBackground) scene.add(floor);
 
     const pathGeo = new THREE.PlaneGeometry(28, 7);
     disposableGeometries.push(pathGeo);
@@ -294,7 +299,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     const path = new THREE.Mesh(pathGeo, pathMat);
     path.rotation.x = -Math.PI / 2;
     path.position.set(0, 0.018, -3.2);
-    scene.add(path);
+    if (showDecorativeBackground) scene.add(path);
 
     const createBackdropTexture = () => {
       const canvas = document.createElement('canvas');
@@ -302,12 +307,12 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       canvas.height = 640;
       const ctx = canvas.getContext('2d')!;
 
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#bfcdf7');
-      gradient.addColorStop(0.46, '#ffd0d8');
-      gradient.addColorStop(1, '#fff3ce');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      // gradient.addColorStop(0, '#bfcdf7');
+      // gradient.addColorStop(0.46, '#ffd0d8');
+      // gradient.addColorStop(1, '#fff3ce');
+      // ctx.fillStyle = gradient;
+      // ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.fillStyle = '#fff1b8';
       ctx.beginPath();
@@ -368,11 +373,15 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
     const backdropGeo = new THREE.PlaneGeometry(32, 14.6);
     disposableGeometries.push(backdropGeo);
-    const backdropMat = new THREE.MeshBasicMaterial({ map: createBackdropTexture(), transparent: true });
+    const backdropMat = new THREE.MeshBasicMaterial({
+      map: createBackdropTexture(),
+      transparent: true,
+      opacity: 0.42,
+    });
     disposableMaterials.push(backdropMat);
     const backdrop = new THREE.Mesh(backdropGeo, backdropMat);
     backdrop.position.set(0, 6.0, -10.4);
-    scene.add(backdrop);
+    if (showDecorativeBackground) scene.add(backdrop);
 
     const createDoodleTexture = (kind: 'star' | 'heart' | 'cloud', color: string) => {
       const canvas = document.createElement('canvas');
@@ -618,7 +627,6 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         const intersectedIdx = cards.indexOf(intersectedCard);
 
         if (hoveredCardIdx !== intersectedIdx) {
-          soundManager.playHover();
           hoveredCardIdx = intersectedIdx;
           document.body.style.cursor = 'pointer';
         }
@@ -636,7 +644,6 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         const clickedCard = intersects[0].object as THREE.Mesh;
         const clickedIdx = cards.indexOf(clickedCard);
 
-        soundManager.playClick();
         onCardClick(clickedIdx);
       }
     };
@@ -668,32 +675,39 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         let targetZ: number;
         let targetRotY: number;
         let targetScale: number;
+        let targetOpacity: number;
 
         if (curViewMode === 'explore') {
-          targetX = (idx - 1.5) * 3.4;
-          targetZ = -Math.abs(targetX) * 0.18 - 1.5;
-          targetRotY = -targetX * 0.08;
-          targetScale = 1.0;
+          const isCenterCard = idx === 1 || idx === 2;
+          targetX = isCenterCard ? (idx === 1 ? -1.95 : 1.95) : (idx === 0 ? -4.15 : 4.15);
+          targetZ = isCenterCard ? -1.1 : -3.15;
+          targetRotY = isCenterCard ? (idx === 1 ? 0.025 : -0.025) : (idx === 0 ? 0.22 : -0.22);
+          targetScale = isCenterCard ? 1.03 : 0.54;
+          targetOpacity = isCenterCard ? 0.98 : 0.58;
         } else if (offset === 0) {
           targetX = -0.55;
           targetZ = 1.25;
           targetRotY = -0.05;
           targetScale = 1.15;
+          targetOpacity = 0.98;
         } else if (offset === -1 || offset === 3) {
           targetX = -3.5;
           targetZ = -0.3;
           targetRotY = 0.52;
           targetScale = 0.82;
+          targetOpacity = 0.88;
         } else if (offset === 1 || offset === -3) {
           targetX = 2.4;
           targetZ = -0.3;
           targetRotY = -0.52;
           targetScale = 0.82;
+          targetOpacity = 0.88;
         } else {
           targetX = offset < 0 ? -4.5 : 4.5;
           targetZ = -2.2;
           targetRotY = offset < 0 ? 0.6 : -0.6;
           targetScale = 0.55;
+          targetOpacity = 0.64;
         }
 
         const floatOffset = Math.sin(time * 1.1 + idx * 1.5) * 0.055;
@@ -710,6 +724,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
         const mat = card.material as THREE.MeshBasicMaterial;
         mat.color.lerp(new THREE.Color(targetColorVal), 0.08);
+        mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.08);
       });
 
       if (curViewMode === 'explore') {

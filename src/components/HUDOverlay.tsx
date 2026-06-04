@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { soundManager } from './SoundManager';
 
 interface HUDOverlayProps {
   activeProject: number;
@@ -9,6 +8,8 @@ interface HUDOverlayProps {
   onSelectProject: (index: number) => void;
   onToggleViewMode: () => void;
   onNavClick: (section: string) => void;
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 }
 
 // Tech details for the 4 project blocks
@@ -148,27 +149,14 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   onSelectProject,
   onToggleViewMode,
   onNavClick,
+  soundEnabled,
+  onToggleSound,
 }) => {
-  const [soundActive, setSoundActive] = useState(false);
   const [showModal, setShowModal] = useState<'about' | 'contact' | null>(null);
   const activeSection = showModal ? showModal.toUpperCase() : viewMode === 'focus' ? 'PROJECTS' : 'EXPLORE';
 
-  // Handle sound button click
-  const handleSoundToggle = () => {
-    soundManager.playClick();
-    if (soundActive) {
-      soundManager.stopAmbient();
-      setSoundActive(false);
-    } else {
-      soundManager.startAmbient();
-      setSoundActive(true);
-    }
-  };
-
   // Nav Item click
   const handleNavClick = (section: string) => {
-    soundManager.playClick();
-    
     if (section === 'ABOUT') {
       setShowModal('about');
       onNavClick('ABOUT');
@@ -189,7 +177,6 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   };
 
   const handleArrowNav = (direction: 'prev' | 'next') => {
-    soundManager.playClick();
     const newIdx = direction === 'prev'
       ? (activeProject - 1 + 4) % 4
       : (activeProject + 1) % 4;
@@ -202,7 +189,6 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   };
 
   const handleThumbnailClick = (index: number) => {
-    soundManager.playClick();
     if (viewMode === 'explore') {
       onToggleViewMode();
     }
@@ -211,7 +197,6 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
 
   // Close modals
   const closeModal = () => {
-    soundManager.playClick();
     setShowModal(null);
   };
 
@@ -322,10 +307,10 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
           </nav>
 
           <div 
-            className={`sound-control interactive ${soundActive ? 'active' : ''}`}
-            onClick={handleSoundToggle}
+            className={`sound-control interactive ${soundEnabled ? 'active' : ''}`}
+            onClick={onToggleSound}
           >
-            <span>SOUND {soundActive ? 'ON' : 'OFF'}</span>
+            <span>SOUND {soundEnabled ? 'ON' : 'OFF'}</span>
             <div className="sound-wave">
               <div className="sound-bar"></div>
               <div className="sound-bar"></div>
@@ -500,7 +485,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             ))}
           </div>
 
-          <button className="btn-cyber-primary" onClick={() => { soundManager.playClick(); alert(`Opening studio preview for: ${projectDetails[activeProject].title}`); }}>
+          <button className="btn-cyber-primary" onClick={() => { alert(`Opening studio preview for: ${projectDetails[activeProject].title}`); }}>
             Open Studio Preview
           </button>
         </div>
