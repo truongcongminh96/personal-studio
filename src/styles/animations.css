@@ -1,0 +1,31 @@
+@keyframes sound-pulse {
+  0% { height: 5px; }
+  100% { height: 16px; }
+}
+
+@keyframes radar-sweep-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes blip {
+  0% {
+    opacity: 0.58;
+    box-shadow: 0 0 0 4px rgba(233, 141, 156, 0.12);
+  }
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 8px rgba(233, 141, 156, 0.18);
+  }
+}
+
+@keyframes blink-soft {
+  0% { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+
+@keyframes blink-fast {
+  0%,
+  100% { opacity: 0; }
+  50% { opacity: 1; }
+}

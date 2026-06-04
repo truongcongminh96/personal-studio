@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import Showroom3D from './components/Showroom3D';
 import HUDOverlay from './components/HUDOverlay';
 import DreamVideoBackground from './components/DreamVideoBackground';
-import './App.css';
 
 function App() {
   const [activeProject, setActiveProject] = useState<number>(0);
