@@ -182,7 +182,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
     const pos = cardPositions[idx];
     const dx = pos.x - cameraPos.x;
     const dz = pos.z - cameraPos.z;
-    let yawRad = Math.atan2(dx, dz);
+    const yawRad = Math.atan2(dx, dz);
     let yawDeg = yawRad * (180 / Math.PI);
     if (yawDeg < 0) yawDeg += 360;
     return {

@@ -95,6 +95,10 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     fillLight.position.set(5, 3.8, 1);
     scene.add(fillLight);
 
+    const sceneObjects: THREE.Object3D[] = [
+      ambientLight, sunLight, fillLight,
+    ];
+
     const doodleSprites: THREE.Sprite[] = [];
     doodleConfigs.forEach((doodle) => {
       const tex = createDoodleTexture(doodle.kind, doodle.color);
@@ -110,6 +114,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       sprite.scale.set(doodle.s, doodle.s, 1);
       scene.add(sprite);
       doodleSprites.push(sprite);
+      sceneObjects.push(sprite);
     });
 
     const cardGeom = new THREE.BoxGeometry(3.5, 2.3, 0.06);
@@ -132,6 +137,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       card.position.set((i - 1.5) * 4.0, 1.1, -1.0);
       scene.add(card);
       cards.push(card);
+      sceneObjects.push(card);
     }
 
     const haloGeom = new THREE.PlaneGeometry(4.8, 3.4);
@@ -155,6 +161,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       halo.position.set((i - 1.5) * 4.0, 1.1, -1.08);
       scene.add(halo);
       cardHalos.push(halo);
+      sceneObjects.push(halo);
     }
 
     // Generate circular particle texture
@@ -197,6 +204,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
     const particles = new THREE.Points(particleGeom, particleMat);
     scene.add(particles);
+    sceneObjects.push(particles);
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -434,6 +442,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       cancelAnimationFrame(animationFrameId);
       document.body.style.cursor = 'default';
 
+      sceneObjects.forEach((obj) => scene.remove(obj));
       disposableGeometries.forEach((geometry) => geometry.dispose());
       disposableMaterials.forEach((material) => material.dispose());
       disposableTextures.forEach((texture) => texture.dispose());

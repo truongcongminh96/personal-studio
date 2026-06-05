@@ -5,7 +5,7 @@ class SoundManager {
   private init() {
     if (this.ctx) return;
     // Support standard and legacy webkit AudioContext
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (AudioCtx) {
       this.ctx = new AudioCtx();
     }
@@ -58,6 +58,7 @@ class SoundManager {
     sound1.osc.stop(this.ctx!.currentTime + 0.12);
 
     setTimeout(() => {
+      if (!this.ctx || !this.enabled) return;
       const sound2 = this.createOscillator('sine', 783.99, 0.22, 0.06); // G5
       if (!sound2) return;
       sound2.osc.start();
@@ -72,21 +73,22 @@ class SoundManager {
       this.ctx.resume().catch(() => {});
     }
 
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(250, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.16);
+    osc.frequency.setValueAtTime(250, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.16);
 
-    gainNode.gain.setValueAtTime(0.04, this.ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.16);
+    gainNode.gain.setValueAtTime(0.04, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16);
 
     osc.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
+    gainNode.connect(ctx.destination);
 
     osc.start();
-    osc.stop(this.ctx.currentTime + 0.16);
+    osc.stop(ctx.currentTime + 0.16);
   }
 
   playPanelOpen() {
@@ -96,21 +98,22 @@ class SoundManager {
       this.ctx.resume().catch(() => {});
     }
 
-    const osc = this.ctx.createOscillator();
-    const gainNode = this.ctx.createGain();
+    const ctx = this.ctx;
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(900, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.22);
+    osc.frequency.setValueAtTime(900, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.22);
 
-    gainNode.gain.setValueAtTime(0.06, this.ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+    gainNode.gain.setValueAtTime(0.06, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
 
     osc.connect(gainNode);
-    gainNode.connect(this.ctx.destination);
+    gainNode.connect(ctx.destination);
 
     osc.start();
-    osc.stop(this.ctx.currentTime + 0.22);
+    osc.stop(ctx.currentTime + 0.22);
   }
 }
 
