@@ -1,7 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { projects, PROJECT_COUNT } from '../data/projects';
 import { getCardinalLabel, isCardinal } from '../utils/hudUtils';
 import ArchitectureDiagram from './ArchitectureDiagram';
+import { soundManager } from '../utils/soundEffects';
+
+const renderProjectIcon = (index: number) => {
+  switch (index) {
+    case 0: // AGENT
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="carousel-svg-icon">
+          <circle cx="12" cy="12" r="3" />
+          <circle cx="6" cy="6" r="2.5" />
+          <circle cx="18" cy="6" r="2.5" />
+          <circle cx="6" cy="18" r="2.5" />
+          <circle cx="18" cy="18" r="2.5" />
+          <line x1="8" y1="8" x2="10" y2="10" />
+          <line x1="16" y1="8" x2="14" y2="10" />
+          <line x1="8" y1="16" x2="10" y2="14" />
+          <line x1="16" y1="16" x2="14" y2="14" />
+        </svg>
+      );
+    case 1: // RAG
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="carousel-svg-icon">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M3 5v6c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+          <path d="M3 11v6c0 1.66 4 3 9 3s9-1.34 9-3v-6" />
+          <line x1="12" y1="8" x2="12" y2="11" />
+          <line x1="12" y1="14" x2="12" y2="17" />
+        </svg>
+      );
+    case 2: // MODELS
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="carousel-svg-icon">
+          <rect x="4" y="4" width="16" height="16" rx="2" />
+          <rect x="9" y="9" width="6" height="6" rx="1" />
+          <line x1="9" y1="1" x2="9" y2="4" />
+          <line x1="15" y1="1" x2="15" y2="4" />
+          <line x1="9" y1="20" x2="9" y2="23" />
+          <line x1="15" y1="20" x2="15" y2="23" />
+          <line x1="1" y1="9" x2="4" y2="9" />
+          <line x1="1" y1="15" x2="4" y2="15" />
+          <line x1="20" y1="9" x2="23" y2="9" />
+          <line x1="20" y1="15" x2="23" y2="15" />
+        </svg>
+      );
+    case 3: // WEBGL
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="carousel-svg-icon active-spin">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+          <line x1="12" y1="22" x2="12" y2="12" />
+          <line x1="2" y1="7" x2="2" y2="17" />
+          <line x1="22" y1="7" x2="22" y2="17" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
 
 interface HUDOverlayProps {
   activeProject: number;
@@ -29,8 +87,28 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   const [showModal, setShowModal] = useState<'about' | 'contact' | null>(null);
   const activeSection = showModal ? showModal.toUpperCase() : viewMode === 'focus' ? 'PROJECTS' : 'EXPLORE';
 
+  // Sync sound manager state
+  useEffect(() => {
+    soundManager.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  // Play sound when view mode changes
+  const isMounted = useRef(false);
+  useEffect(() => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    if (viewMode === 'focus') {
+      soundManager.playPanelOpen();
+    } else {
+      soundManager.playViewModeToggle();
+    }
+  }, [viewMode]);
+
   // Nav Item click
   const handleNavClick = (section: string) => {
+    soundManager.playHoverClick();
     if (section === 'ABOUT') {
       setShowModal('about');
       onNavClick('ABOUT');
@@ -51,6 +129,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   };
 
   const handleArrowNav = (direction: 'prev' | 'next') => {
+    soundManager.playSelectProject();
     const newIdx = direction === 'prev'
       ? (activeProject - 1 + PROJECT_COUNT) % PROJECT_COUNT
       : (activeProject + 1) % PROJECT_COUNT;
@@ -62,6 +141,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   };
 
   const handleThumbnailClick = (index: number) => {
+    soundManager.playSelectProject();
     if (viewMode === 'explore') {
       onToggleViewMode();
     }
@@ -69,6 +149,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   };
 
   const closeModal = () => {
+    soundManager.playHoverClick();
     setShowModal(null);
   };
 
@@ -89,6 +170,29 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   }
 
   const compassOffset = -(cameraYaw * (compassScaleWidth / 15));
+
+  // --- CALCULATE PROJECT POI ANGLES ---
+  const projectPOIs = projects.map((p, idx) => {
+    const cardPositions = [
+      { x: -5.0, z: -1.6 },
+      { x: -1.7, z: -0.4 },
+      { x: 1.7,  z: -0.4 },
+      { x: 5.0,  z: -1.6 },
+    ];
+    const pos = cardPositions[idx];
+    const dx = pos.x - cameraPos.x;
+    const dz = pos.z - cameraPos.z;
+    let yawRad = Math.atan2(dx, dz);
+    let yawDeg = yawRad * (180 / Math.PI);
+    if (yawDeg < 0) yawDeg += 360;
+    return {
+      index: idx,
+      yaw: yawDeg,
+      abbr: p.abbr,
+      swatch: p.swatch,
+      title: p.title,
+    };
+  });
 
   return (
     <>
@@ -114,36 +218,44 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             <div
               className={`nav-item ${activeSection === 'EXPLORE' ? 'active' : ''}`}
               onClick={() => handleNavClick('EXPLORE')}
+              onMouseEnter={() => soundManager.playHoverClick()}
             >
               EXPLORE
             </div>
             <div
               className={`nav-item ${activeSection === 'PROJECTS' ? 'active' : ''}`}
               onClick={() => handleNavClick('PROJECTS')}
+              onMouseEnter={() => soundManager.playHoverClick()}
             >
               PROJECTS
             </div>
             <div
               className={`nav-item ${activeSection === 'ABOUT' ? 'active' : ''}`}
               onClick={() => handleNavClick('ABOUT')}
+              onMouseEnter={() => soundManager.playHoverClick()}
             >
               ABOUT
             </div>
             <div
               className={`nav-item ${activeSection === 'CONTACT' ? 'active' : ''}`}
               onClick={() => handleNavClick('CONTACT')}
+              onMouseEnter={() => soundManager.playHoverClick()}
             >
               CONTACT
             </div>
 
-            <button className="btn-showroom" onClick={onToggleViewMode}>
+            <button className="btn-showroom" onClick={onToggleViewMode} onMouseEnter={() => soundManager.playHoverClick()}>
               {viewMode === 'explore' ? 'Open Studio View' : 'Dreamscape View'}
             </button>
           </nav>
 
           <div 
             className={`sound-control interactive ${soundEnabled ? 'active' : ''}`}
-            onClick={onToggleSound}
+            onClick={() => {
+              onToggleSound();
+              soundManager.playHoverClick();
+            }}
+            onMouseEnter={() => soundManager.playHoverClick()}
           >
             <span>SOUND {soundEnabled ? 'ON' : 'OFF'}</span>
             <div className="sound-wave">
@@ -166,19 +278,26 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
               <div className="radar-crosshair-v"></div>
               <div className="radar-sweep"></div>
 
-              {radarProjectPositions.map((pos, idx) => (
-                <div
-                  key={idx}
-                  className="radar-project-dot"
-                  style={{
-                    left: `${pos.x}%`,
-                    top: `${pos.z}%`,
-                    backgroundColor: idx === activeProject && viewMode === 'focus' ? '#e98d9c' : '#74b9aa',
-                    boxShadow: idx === activeProject && viewMode === 'focus' ? '0 0 0 5px rgba(233, 141, 156, 0.16)' : '0 0 0 4px rgba(116, 185, 170, 0.14)'
-                  }}
-                  title={projects[idx].title}
-                ></div>
-              ))}
+              {radarProjectPositions.map((pos, idx) => {
+                const isActive = idx === activeProject && viewMode === 'focus';
+                return (
+                  <div
+                    key={idx}
+                    className={`radar-project-dot ${isActive ? 'active' : ''}`}
+                    style={{
+                      left: `${pos.x}%`,
+                      top: `${pos.z}%`,
+                      backgroundColor: isActive ? '#e98d9c' : '#74b9aa',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleThumbnailClick(idx)}
+                    onMouseEnter={() => soundManager.playHoverClick()}
+                    title={projects[idx].title}
+                  >
+                    <span className="radar-tooltip">{projects[idx].abbr}</span>
+                  </div>
+                );
+              })}
 
               <div
                 className="radar-dot"
@@ -186,13 +305,25 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                   left: `${radarDotX}%`,
                   top: `${radarDotZ}%`
                 }}
-              ></div>
+              >
+                <div
+                  className="radar-fov"
+                  style={{ transform: `translate(-50%, 0) rotate(${-cameraYaw}deg)` }}
+                />
+              </div>
+
+              <div className="radar-coords">
+                POS: [{cameraPos.x.toFixed(1)}, {cameraPos.z.toFixed(1)}]
+              </div>
 
               <div className="radar-label">MAP POSITION</div>
             </div>
           </div>
 
           <div className="compass-panel cyber-panel">
+            <div className="compass-bearing">
+              HEADING: {cameraYaw.toFixed(0).padStart(3, '0')}°
+            </div>
             <div className="compass-pointer-top">▼</div>
             <div className="compass-container">
               <div
@@ -202,18 +333,49 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                 {compassTicks.map((tickAngle) => {
                   const label = getCardinalLabel(tickAngle);
                   const isCard = isCardinal(tickAngle);
+                  const normalTick = (tickAngle + 360) % 360;
+                  const isLocked = isCard && Math.abs(normalTick - cameraYaw) < 6.0;
+
                   return (
                     <div
                       key={tickAngle}
                       className="compass-mark"
                       style={{ left: `${(tickAngle + 180) * (compassScaleWidth / 15)}px` }}
                     >
-                      <div className={`compass-line ${isCard ? 'compass-line-major' : ''}`}></div>
-                      <div className={`compass-text ${isCard ? 'compass-text-cardinal' : ''}`}>
+                      <div className={`compass-line ${isCard ? 'compass-line-major' : ''} ${isLocked ? 'locked' : ''}`}></div>
+                      <div className={`compass-text ${isCard ? 'compass-text-cardinal' : ''} ${isLocked ? 'locked' : ''}`}>
                         {label}
                       </div>
                     </div>
                   );
+                })}
+
+                {/* Project POI Indicators on sliding scale */}
+                {projectPOIs.map((poi) => {
+                  const offsets = [0];
+                  if (poi.yaw < 180) offsets.push(360);
+                  if (poi.yaw > 180) offsets.push(-360);
+                  
+                  return offsets.map((offset) => {
+                    const angle = poi.yaw + offset;
+                    const leftPos = (angle + 180) * (compassScaleWidth / 15);
+                    const isActive = activeProject === poi.index && viewMode === 'focus';
+                    return (
+                      <div
+                        key={`${poi.index}-${offset}`}
+                        className={`compass-poi ${isActive ? 'active' : ''}`}
+                        style={{ 
+                          left: `${leftPos}px`,
+                        }}
+                        onClick={() => handleThumbnailClick(poi.index)}
+                        onMouseEnter={() => soundManager.playHoverClick()}
+                        title={`Navigate to: ${poi.title}`}
+                      >
+                        <div className="compass-poi-dot" style={{ backgroundColor: poi.swatch }} />
+                        <div className="compass-poi-text" style={{ color: poi.swatch }}>{poi.abbr}</div>
+                      </div>
+                    );
+                  });
                 })}
               </div>
             </div>
@@ -221,45 +383,39 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
           </div>
 
           <div className="control-panel interactive">
-            <div className="arrows-group">
-              <div className="btn-arrow" onClick={() => handleArrowNav('prev')} title="Previous Project">
-                ◀
+            <div className="control-panel-header">
+              <div className="arrows-group">
+                <div className="btn-arrow" onClick={() => handleArrowNav('prev')} onMouseEnter={() => soundManager.playHoverClick()} title="Previous Project">
+                  ◀
+                </div>
+                <div className="btn-arrow" onClick={() => handleArrowNav('next')} onMouseEnter={() => soundManager.playHoverClick()} title="Next Project">
+                  ▶
+                </div>
               </div>
-              <div className="btn-arrow" onClick={() => handleArrowNav('next')} title="Next Project">
-                ▶
+              <div className="carousel-index">
+                INDEX: 0{activeProject + 1} / 0{PROJECT_COUNT}
               </div>
             </div>
 
             <div className="carousel-container">
-              {projects.map((p, idx) => (
-                <div
-                  key={idx}
-                  className={`carousel-thumb ${activeProject === idx && viewMode === 'focus' ? 'active' : ''}`}
-                  onClick={() => handleThumbnailClick(idx)}
-                  title={p.title}
-                >
-                  <div style={{
-                    width: '100%',
-                    height: '100%',
-                    background: activeProject === idx && viewMode === 'focus'
-                      ? 'radial-gradient(circle, rgba(255,240,190,0.72) 0%, rgba(255,220,227,0.78) 100%)'
-                      : 'radial-gradient(circle, rgba(255,255,255,0.72) 0%, rgba(216,240,221,0.56) 100%)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <div style={{
-                      width: '10px',
-                      height: '10px',
-                      border: `2px solid ${p.swatch}`,
-                      borderRadius: p.carouselShape === 'circle' ? '50%' : '4px',
-                      background: 'rgba(255, 250, 240, 0.72)'
-                    }}></div>
+              {projects.map((p, idx) => {
+                const isActive = activeProject === idx && viewMode === 'focus';
+                return (
+                  <div
+                    key={idx}
+                    className={`carousel-thumb ${isActive ? 'active' : ''}`}
+                    style={{ '--accent-color': p.swatch } as React.CSSProperties}
+                    onClick={() => handleThumbnailClick(idx)}
+                    onMouseEnter={() => soundManager.playHoverClick()}
+                    title={p.title}
+                  >
+                    <div className="carousel-thumb-icon-wrapper" style={{ color: p.swatch }}>
+                      {renderProjectIcon(idx)}
+                    </div>
                     <div className="carousel-thumb-overlay">{p.abbr}</div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </footer>
@@ -270,7 +426,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
           <div className="panel-tag">
             {projects[activeProject].tag}
           </div>
-          <button className="panel-close-btn" onClick={onToggleViewMode}>
+          <button className="panel-close-btn" onClick={onToggleViewMode} onMouseEnter={() => soundManager.playHoverClick()}>
             Close
           </button>
         </div>
@@ -302,7 +458,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             ))}
           </div>
 
-          <button className="btn-cyber-primary" onClick={() => { alert(`Opening studio preview for: ${projects[activeProject].title}`); }}>
+          <button className="btn-cyber-primary" onClick={() => { alert(`Opening studio preview for: ${projects[activeProject].title}`); }} onMouseEnter={() => soundManager.playHoverClick()}>
             Open Studio Preview
           </button>
         </div>
@@ -314,7 +470,7 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             className={`hud-modal cyber-panel ${showModal === 'contact' ? 'cyber-panel-magenta' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="modal-close" onClick={closeModal}>CLOSE [X]</button>
+            <button className="modal-close" onClick={closeModal} onMouseEnter={() => soundManager.playHoverClick()}>CLOSE [X]</button>
 
             <div className="terminal-header">
               {showModal === 'about' ? 'About Minh' : 'Contact'}

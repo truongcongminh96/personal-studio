@@ -18,6 +18,25 @@ const doodleConfigs = [
   { kind: 'heart' as const, color: '#f8b7c4', x: 6.2, y: 4.1, z: -6.0, s: 0.46 },
 ];
 
+const createGlowTexture = (colorStr: string) => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, colorStr);
+  grad.addColorStop(0.35, colorStr + '77'); // transparent glow
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+};
+
 export const Showroom3D: React.FC<Showroom3DProps> = ({
   activeProject,
   viewMode,
@@ -115,6 +134,70 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       cards.push(card);
     }
 
+    const haloGeom = new THREE.PlaneGeometry(4.8, 3.4);
+    disposableGeometries.push(haloGeom);
+    const cardHalos: THREE.Mesh[] = [];
+
+    for (let i = 0; i < PROJECT_COUNT; i++) {
+      const glowTex = createGlowTexture(projects[i].accent);
+      disposableTextures.push(glowTex);
+
+      const haloMat = new THREE.MeshBasicMaterial({
+        map: glowTex,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      disposableMaterials.push(haloMat);
+
+      const halo = new THREE.Mesh(haloGeom, haloMat);
+      halo.position.set((i - 1.5) * 4.0, 1.1, -1.08);
+      scene.add(halo);
+      cardHalos.push(halo);
+    }
+
+    // Generate circular particle texture
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 16;
+    pCanvas.height = 16;
+    const pCtx = pCanvas.getContext('2d')!;
+    const pGrad = pCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
+    pGrad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    pGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    pCtx.fillStyle = pGrad;
+    pCtx.fillRect(0, 0, 16, 16);
+    const pTex = new THREE.CanvasTexture(pCanvas);
+    disposableTextures.push(pTex);
+
+    const particleCount = 220;
+    const particleGeom = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleSpeeds = new Float32Array(particleCount);
+
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (Math.random() - 0.5) * 22;
+      particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 12 + 1.5;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 14 - 2;
+      particleSpeeds[i] = 0.05 + Math.random() * 0.15;
+    }
+
+    particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    disposableGeometries.push(particleGeom);
+
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.18,
+      map: pTex,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    disposableMaterials.push(particleMat);
+
+    const particles = new THREE.Points(particleGeom, particleMat);
+    scene.add(particles);
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let hoveredCardIdx: number | null = null;
@@ -190,12 +273,19 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         let targetOpacity: number;
 
         if (curViewMode === 'explore') {
-          const isCenterCard = idx === 1 || idx === 2;
-          targetX = isCenterCard ? (idx === 1 ? -1.95 : 1.95) : (idx === 0 ? -4.15 : 4.15);
-          targetZ = isCenterCard ? -1.1 : -3.15;
-          targetRotY = isCenterCard ? (idx === 1 ? 0.025 : -0.025) : (idx === 0 ? 0.22 : -0.22);
-          targetScale = isCenterCard ? 1.03 : 0.54;
-          targetOpacity = isCenterCard ? 0.98 : 0.58;
+          // Elegant arc layout — all 4 cards clearly visible
+          const arcPositions = [
+            { x: -5.0, z: -1.6, rotY: 0.32, scale: 0.88, opacity: 0.92 },  // outer left
+            { x: -1.7, z: -0.4, rotY: 0.06, scale: 1.03, opacity: 0.98 },  // inner left
+            { x: 1.7,  z: -0.4, rotY: -0.06, scale: 1.03, opacity: 0.98 }, // inner right
+            { x: 5.0,  z: -1.6, rotY: -0.32, scale: 0.88, opacity: 0.92 }, // outer right
+          ];
+          const pos = arcPositions[idx] || arcPositions[0];
+          targetX = pos.x;
+          targetZ = pos.z;
+          targetRotY = pos.rotY;
+          targetScale = pos.scale;
+          targetOpacity = pos.opacity;
         } else if (offset === 0) {
           targetX = -0.55;
           targetZ = 1.25;
@@ -237,15 +327,67 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         const mat = card.material as THREE.MeshBasicMaterial;
         mat.color.lerp(targetColor, 0.08);
         mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.08);
+
+        // ── Card Backlight Halo Animation ──
+        const halo = cardHalos[idx];
+        if (halo) {
+          halo.position.x = card.position.x;
+          halo.position.y = card.position.y;
+          halo.position.z = THREE.MathUtils.lerp(halo.position.z, targetZ - 0.08, 0.07);
+          halo.rotation.y = card.rotation.y;
+
+          const isFocused = idx === curActiveProject && curViewMode === 'focus';
+          const isHovered = hoveredCardIdx === idx;
+          
+          let targetHaloOpacity = 0;
+          let haloPulseScale = 1;
+
+          if (isFocused) {
+            targetHaloOpacity = 0.88;
+            haloPulseScale = 1.05 + Math.sin(time * 3.5) * 0.04;
+          } else if (isHovered) {
+            targetHaloOpacity = 0.58;
+            haloPulseScale = 1.03 + Math.sin(time * 2.0) * 0.02;
+          } else if (curViewMode === 'explore') {
+            targetHaloOpacity = 0.22;
+            haloPulseScale = 0.98 + Math.sin(time * 1.2 + idx) * 0.015;
+          }
+
+          const targetHaloScale = targetScale * haloPulseScale;
+          const nextHaloScale = THREE.MathUtils.lerp(halo.scale.x, targetHaloScale, 0.07);
+          halo.scale.set(nextHaloScale, nextHaloScale, nextHaloScale);
+
+          const hMat = halo.material as THREE.MeshBasicMaterial;
+          hMat.opacity = THREE.MathUtils.lerp(hMat.opacity, targetHaloOpacity, 0.08);
+        }
       });
+
+      // ── Drift particles dynamically ──
+      if (particles && particleGeom) {
+        const posAttr = particleGeom.getAttribute('position') as THREE.BufferAttribute;
+        for (let i = 0; i < particleCount; i++) {
+          let py = posAttr.getY(i);
+          py += particleSpeeds[i] * 0.035;
+          if (py > 7.0) py = -5.0;
+          posAttr.setY(i, py);
+
+          const px = posAttr.getX(i);
+          posAttr.setX(i, px + Math.sin(time * 0.4 + i) * 0.0018);
+        }
+        posAttr.needsUpdate = true;
+
+        // Rotate the particle field slightly with mouse parallax
+        particles.rotation.y = mouseParallax.x * 0.08;
+        particles.rotation.x = -mouseParallax.y * 0.08;
+      }
 
       if (curViewMode === 'explore') {
         const targetX = Math.sin(time * 0.08) + mouseParallax.x * 0.5;
-        const targetY = 2.1 + Math.cos(time * 0.08) * 0.15 + mouseParallax.y * 0.25;
-        const targetZ = 6.4 + Math.sin(time * 0.04) * 0.3;
+        const targetY = 2.3 + Math.cos(time * 0.08) * 0.15 + mouseParallax.y * 0.25;
+        const targetZ = 7.2 + Math.sin(time * 0.04) * 0.3;
 
         targetCamPos.set(targetX, targetY, targetZ);
-        targetLookAt.set(0, 1.1, -1);
+        targetLookAt.set(0, 0.9, -1.2);
       } else {
         const targetX = mouseParallax.x * 0.25;
         const targetY = 1.7 + mouseParallax.y * 0.15;
