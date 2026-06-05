@@ -255,7 +255,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
         style={{
           position: 'absolute',
           inset: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.06)',
+          backgroundColor: 'rgba(255, 250, 244, 0.16)',
           pointerEvents: 'none',
         }}
       />
@@ -265,7 +265,17 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to bottom, rgba(248, 231, 233, 0.08) 0%, transparent 48%, rgba(246, 234, 216, 0.14) 100%)',
+          background: 'linear-gradient(to bottom, rgba(255, 246, 238, 0.18) 0%, rgba(255, 246, 238, 0.04) 45%, rgba(246, 234, 216, 0.22) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Layer 3: central reading plane for the floating cards */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at 50% 48%, rgba(255, 250, 240, 0.28) 0%, rgba(255, 250, 240, 0.16) 34%, transparent 64%)',
           pointerEvents: 'none',
         }}
       />
@@ -275,7 +285,7 @@ export const DreamVideoBackground: React.FC<DreamVideoBackgroundProps> = ({
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'radial-gradient(circle, transparent 65%, rgba(143, 103, 111, 0.06) 100%)',
+          background: 'radial-gradient(circle, transparent 58%, rgba(111, 82, 92, 0.11) 100%)',
           pointerEvents: 'none',
         }}
       />

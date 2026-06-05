@@ -84,8 +84,27 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   soundEnabled,
   onToggleSound,
 }) => {
-  const [showModal, setShowModal] = useState<'about' | 'contact' | null>(null);
-  const activeSection = showModal ? showModal.toUpperCase() : viewMode === 'focus' ? 'PROJECTS' : 'EXPLORE';
+  const [showModal, setShowModal] = useState<'director' | 'booking' | null>(null);
+  const [studioPreviewOpen, setStudioPreviewOpen] = useState(false);
+  const [panelReadyKey, setPanelReadyKey] = useState<string | null>(null);
+  const [clapperVisibleKey, setClapperVisibleKey] = useState<string | null>(null);
+  const currentProject = projects[activeProject];
+  const focusKey = viewMode === 'focus' ? `set-${activeProject}` : null;
+  const panelOpen = Boolean(focusKey && panelReadyKey === focusKey);
+  const clapper = focusKey && clapperVisibleKey === focusKey
+    ? {
+      take: String(activeProject + 1).padStart(2, '0'),
+      abbr: currentProject.abbr,
+      title: currentProject.title,
+    }
+    : null;
+  const activeSection = showModal === 'director'
+    ? 'DIRECTOR'
+    : showModal === 'booking'
+      ? 'BOOKING'
+      : viewMode === 'focus'
+        ? 'SETS'
+        : 'DREAMSCAPE';
 
   // Sync sound manager state
   useEffect(() => {
@@ -106,21 +125,51 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
     }
   }, [viewMode]);
 
+  useEffect(() => {
+    let panelTimer: number | undefined;
+    let clapperTimer: number | undefined;
+    let resetTimer: number | undefined;
+
+    if (focusKey) {
+      resetTimer = window.setTimeout(() => {
+        setPanelReadyKey(null);
+        setClapperVisibleKey(focusKey);
+      }, 0);
+      panelTimer = window.setTimeout(() => setPanelReadyKey(focusKey), 210);
+      clapperTimer = window.setTimeout(() => setClapperVisibleKey(null), 940);
+    } else {
+      resetTimer = window.setTimeout(() => {
+        setPanelReadyKey(null);
+        setClapperVisibleKey(null);
+      }, 0);
+    }
+
+    return () => {
+      if (resetTimer) window.clearTimeout(resetTimer);
+      if (panelTimer) window.clearTimeout(panelTimer);
+      if (clapperTimer) window.clearTimeout(clapperTimer);
+    };
+  }, [focusKey]);
+
   // Nav Item click
   const handleNavClick = (section: string) => {
     soundManager.playHoverClick();
-    if (section === 'ABOUT') {
-      setShowModal('about');
+    if (section === 'DIRECTOR') {
+      setShowModal('director');
       onNavClick('ABOUT');
-    } else if (section === 'CONTACT') {
-      setShowModal('contact');
+    } else if (section === 'BOOKING') {
+      setShowModal('booking');
       onNavClick('CONTACT');
-    } else if (section === 'EXPLORE') {
+    } else if (section === 'DREAMSCAPE') {
+      setShowModal(null);
+      setStudioPreviewOpen(false);
       if (viewMode === 'focus') {
         onToggleViewMode();
       }
       onNavClick('EXPLORE');
-    } else if (section === 'PROJECTS') {
+    } else if (section === 'SETS') {
+      setShowModal(null);
+      setStudioPreviewOpen(false);
       if (viewMode === 'explore') {
         onToggleViewMode();
       }
@@ -151,6 +200,12 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
   const closeModal = () => {
     soundManager.playHoverClick();
     setShowModal(null);
+    setStudioPreviewOpen(false);
+  };
+
+  const openStudioPreview = () => {
+    soundManager.playPanelOpen();
+    setStudioPreviewOpen(true);
   };
 
   // --- COORDINATE MAPPER FOR RADAR ---
@@ -210,42 +265,42 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             <h1 className="main-title">MINH TRUONG</h1>
             <div className="title-line"></div>
             <p className="subtitle">
-              Building the future with AI Agents, RAG, and innovative technologies.
+              AI learning film studio for agents, retrieval systems, model craft, and WebGL scenes.
             </p>
           </div>
 
           <nav className="nav-menu interactive">
-            <div
-              className={`nav-item ${activeSection === 'EXPLORE' ? 'active' : ''}`}
-              onClick={() => handleNavClick('EXPLORE')}
+            <button
+              className={`nav-item ${activeSection === 'DREAMSCAPE' ? 'active' : ''}`}
+              onClick={() => handleNavClick('DREAMSCAPE')}
               onMouseEnter={() => soundManager.playHoverClick()}
             >
-              EXPLORE
-            </div>
-            <div
-              className={`nav-item ${activeSection === 'PROJECTS' ? 'active' : ''}`}
-              onClick={() => handleNavClick('PROJECTS')}
+              Dreamscape
+            </button>
+            <button
+              className={`nav-item ${activeSection === 'SETS' ? 'active' : ''}`}
+              onClick={() => handleNavClick('SETS')}
               onMouseEnter={() => soundManager.playHoverClick()}
             >
-              PROJECTS
-            </div>
-            <div
-              className={`nav-item ${activeSection === 'ABOUT' ? 'active' : ''}`}
-              onClick={() => handleNavClick('ABOUT')}
+              Sets
+            </button>
+            <button
+              className={`nav-item ${activeSection === 'DIRECTOR' ? 'active' : ''}`}
+              onClick={() => handleNavClick('DIRECTOR')}
               onMouseEnter={() => soundManager.playHoverClick()}
             >
-              ABOUT
-            </div>
-            <div
-              className={`nav-item ${activeSection === 'CONTACT' ? 'active' : ''}`}
-              onClick={() => handleNavClick('CONTACT')}
+              Director Note
+            </button>
+            <button
+              className={`nav-item ${activeSection === 'BOOKING' ? 'active' : ''}`}
+              onClick={() => handleNavClick('BOOKING')}
               onMouseEnter={() => soundManager.playHoverClick()}
             >
-              CONTACT
-            </div>
+              Booking
+            </button>
 
             <button className="btn-showroom" onClick={onToggleViewMode} onMouseEnter={() => soundManager.playHoverClick()}>
-              {viewMode === 'explore' ? 'Open Studio View' : 'Dreamscape View'}
+              {viewMode === 'explore' ? 'Enter Studio' : 'Back to Dreamscape'}
             </button>
           </nav>
 
@@ -268,8 +323,19 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
           </div>
         </header>
 
-        <footer className="hud-bottom">
-          <div className="radar-panel cyber-panel interactive">
+        {clapper && (
+          <div className="studio-clapper" aria-live="polite">
+            <div className="clapper-stripes" />
+            <div className="clapper-copy">
+              <span>TAKE {clapper.take}</span>
+              <strong>{clapper.abbr}</strong>
+              <small>{clapper.title}</small>
+            </div>
+          </div>
+        )}
+
+        <footer className="hud-bottom director-desk">
+          <div className="radar-panel stage-map-panel studio-panel interactive" aria-label="Studio floor map">
             <div className="radar-display">
               <div className="radar-circle radar-circle-1"></div>
               <div className="radar-circle radar-circle-2"></div>
@@ -281,21 +347,23 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
               {radarProjectPositions.map((pos, idx) => {
                 const isActive = idx === activeProject && viewMode === 'focus';
                 return (
-                  <div
+                  <button
                     key={idx}
+                    type="button"
                     className={`radar-project-dot ${isActive ? 'active' : ''}`}
                     style={{
                       left: `${pos.x}%`,
                       top: `${pos.z}%`,
                       backgroundColor: isActive ? '#e98d9c' : '#74b9aa',
-                      cursor: 'pointer',
                     }}
+                    aria-label={`Enter ${projects[idx].abbr} set: ${projects[idx].title}`}
+                    aria-pressed={isActive}
                     onClick={() => handleThumbnailClick(idx)}
                     onMouseEnter={() => soundManager.playHoverClick()}
                     title={projects[idx].title}
                   >
-                    <span className="radar-tooltip">{projects[idx].abbr}</span>
-                  </div>
+                    <span className="radar-tooltip">Enter {projects[idx].abbr}</span>
+                  </button>
                 );
               })}
 
@@ -313,16 +381,22 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
               </div>
 
               <div className="radar-coords">
-                POS: [{cameraPos.x.toFixed(1)}, {cameraPos.z.toFixed(1)}]
+                CAM: [{cameraPos.x.toFixed(1)}, {cameraPos.z.toFixed(1)}]
               </div>
 
-              <div className="radar-label">MAP POSITION</div>
+              <div className="radar-label">STUDIO MAP</div>
             </div>
           </div>
 
-          <div className="compass-panel cyber-panel">
+          <div className="compass-panel lens-ruler-panel studio-panel" aria-label="Lens bearing ruler">
             <div className="compass-bearing">
-              HEADING: {cameraYaw.toFixed(0).padStart(3, '0')}°
+              LENS {cameraYaw.toFixed(0).padStart(3, '0')}°
+            </div>
+            <div className="shot-lock-label">
+              {viewMode === 'focus' ? `SHOT LOCKED: ${currentProject.abbr}` : 'DREAMSCAPE PAN'}
+            </div>
+            <div className="lens-gate" aria-hidden="true">
+              <span />
             </div>
             <div className="compass-pointer-top">▼</div>
             <div className="compass-container">
@@ -343,8 +417,8 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                       style={{ left: `${(tickAngle + 180) * (compassScaleWidth / 15)}px` }}
                     >
                       <div className={`compass-line ${isCard ? 'compass-line-major' : ''} ${isLocked ? 'locked' : ''}`}></div>
-                      <div className={`compass-text ${isCard ? 'compass-text-cardinal' : ''} ${isLocked ? 'locked' : ''}`}>
-                        {label}
+                      <div className={`compass-text ${isCard ? 'compass-text-cardinal' : 'compass-text-minor'} ${isLocked ? 'locked' : ''}`}>
+                        {isCard ? label : ''}
                       </div>
                     </div>
                   );
@@ -361,19 +435,23 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                     const leftPos = (angle + 180) * (compassScaleWidth / 15);
                     const isActive = activeProject === poi.index && viewMode === 'focus';
                     return (
-                      <div
+                      <button
                         key={`${poi.index}-${offset}`}
+                        type="button"
                         className={`compass-poi ${isActive ? 'active' : ''}`}
                         style={{ 
                           left: `${leftPos}px`,
+                          color: poi.swatch,
                         }}
+                        aria-label={`Frame ${poi.abbr} set`}
+                        aria-pressed={isActive}
                         onClick={() => handleThumbnailClick(poi.index)}
                         onMouseEnter={() => soundManager.playHoverClick()}
                         title={`Navigate to: ${poi.title}`}
                       >
                         <div className="compass-poi-dot" style={{ backgroundColor: poi.swatch }} />
-                        <div className="compass-poi-text" style={{ color: poi.swatch }}>{poi.abbr}</div>
-                      </div>
+                        <div className="compass-poi-text">{poi.abbr}</div>
+                      </button>
                     );
                   });
                 })}
@@ -382,29 +460,32 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             <div className="compass-pointer-bottom">▲</div>
           </div>
 
-          <div className="control-panel interactive">
+          <div className="control-panel director-dock interactive" aria-label="Director set dock">
             <div className="control-panel-header">
               <div className="arrows-group">
-                <div className="btn-arrow" onClick={() => handleArrowNav('prev')} onMouseEnter={() => soundManager.playHoverClick()} title="Previous Project">
+                <button className="btn-arrow" type="button" onClick={() => handleArrowNav('prev')} onMouseEnter={() => soundManager.playHoverClick()} title="Previous set" aria-label="Previous set">
                   ◀
-                </div>
-                <div className="btn-arrow" onClick={() => handleArrowNav('next')} onMouseEnter={() => soundManager.playHoverClick()} title="Next Project">
+                </button>
+                <button className="btn-arrow" type="button" onClick={() => handleArrowNav('next')} onMouseEnter={() => soundManager.playHoverClick()} title="Next set" aria-label="Next set">
                   ▶
-                </div>
+                </button>
               </div>
-              <div className="carousel-index">
-                INDEX: 0{activeProject + 1} / 0{PROJECT_COUNT}
+              <div className="active-take-label">
+                TAKE 0{activeProject + 1} / {currentProject.abbr}
               </div>
             </div>
 
-            <div className="carousel-container">
+            <div className="carousel-container set-dock">
               {projects.map((p, idx) => {
                 const isActive = activeProject === idx && viewMode === 'focus';
                 return (
-                  <div
+                  <button
                     key={idx}
+                    type="button"
                     className={`carousel-thumb ${isActive ? 'active' : ''}`}
                     style={{ '--accent-color': p.swatch } as React.CSSProperties}
+                    aria-label={`Open take ${idx + 1}: ${p.title}`}
+                    aria-pressed={isActive}
                     onClick={() => handleThumbnailClick(idx)}
                     onMouseEnter={() => soundManager.playHoverClick()}
                     title={p.title}
@@ -412,8 +493,8 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
                     <div className="carousel-thumb-icon-wrapper" style={{ color: p.swatch }}>
                       {renderProjectIcon(idx)}
                     </div>
-                    <div className="carousel-thumb-overlay">{p.abbr}</div>
-                  </div>
+                    <div className="carousel-thumb-overlay">T{idx + 1} / {p.abbr}</div>
+                  </button>
                 );
               })}
             </div>
@@ -421,36 +502,37 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
         </footer>
       </div>
 
-      <div className={`detail-side-panel cyber-panel ${viewMode === 'focus' ? 'open' : ''} ${activeProject % 2 === 0 ? 'cyber-panel-magenta' : ''}`}>
+      <div className={`detail-side-panel studio-panel cyber-panel ${panelOpen ? 'open' : ''} ${activeProject % 2 === 0 ? 'cyber-panel-magenta' : ''}`}>
         <div className="panel-header">
           <div className="panel-tag">
-            {projects[activeProject].tag}
+            Production Notes / {currentProject.tag}
           </div>
           <button className="panel-close-btn" onClick={onToggleViewMode} onMouseEnter={() => soundManager.playHoverClick()}>
             Close
           </button>
         </div>
 
-        <h2 className="panel-title">{projects[activeProject].title}</h2>
+        <h2 className="panel-title">{currentProject.title}</h2>
 
         <div className="panel-scrollable">
+          <h3 className="panel-section-title">Scene Brief</h3>
           <p className="panel-desc">
-            {projects[activeProject].desc}
+            {currentProject.desc}
           </p>
 
           <h3 className="panel-section-title">Toolkit</h3>
           <div className="tech-tag-list">
-            {projects[activeProject].tech.map((t, idx) => (
+            {currentProject.tech.map((t, idx) => (
               <span key={idx} className="tech-tag">{t}</span>
             ))}
           </div>
 
-          <h3 className="panel-section-title">Project Flow</h3>
+          <h3 className="panel-section-title">Pipeline</h3>
           <ArchitectureDiagram index={activeProject} />
 
-          <h3 className="panel-section-title">Highlights</h3>
+          <h3 className="panel-section-title">Key Shots</h3>
           <div className="metrics-grid">
-            {projects[activeProject].metrics.map((m, idx) => (
+            {currentProject.metrics.map((m, idx) => (
               <div key={idx} className="metric-item">
                 <div className="metric-label">{m.label}</div>
                 <div className="metric-value">{m.value}</div>
@@ -458,26 +540,52 @@ export const HUDOverlay: React.FC<HUDOverlayProps> = ({
             ))}
           </div>
 
-          <button className="btn-cyber-primary" onClick={() => { alert(`Opening studio preview for: ${projects[activeProject].title}`); }} onMouseEnter={() => soundManager.playHoverClick()}>
+          <button className="btn-cyber-primary btn-studio-primary" onClick={openStudioPreview} onMouseEnter={() => soundManager.playHoverClick()}>
             Open Studio Preview
           </button>
         </div>
       </div>
 
-      {showModal && (
+      {(showModal || studioPreviewOpen) && (
         <div className="hud-modal-overlay interactive" onClick={closeModal}>
           <div
-            className={`hud-modal cyber-panel ${showModal === 'contact' ? 'cyber-panel-magenta' : ''}`}
+            className={`hud-modal studio-panel cyber-panel ${showModal === 'booking' ? 'cyber-panel-magenta' : ''} ${studioPreviewOpen ? 'studio-preview-modal' : ''}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="modal-close" onClick={closeModal} onMouseEnter={() => soundManager.playHoverClick()}>CLOSE [X]</button>
+            <button className="modal-close" onClick={closeModal} onMouseEnter={() => soundManager.playHoverClick()}>Close</button>
 
             <div className="terminal-header">
-              {showModal === 'about' ? 'About Minh' : 'Contact'}
+              {studioPreviewOpen ? `${currentProject.abbr} Studio Preview` : showModal === 'director' ? 'Director Note' : 'Booking'}
             </div>
 
             <div className="terminal-body">
-              {showModal === 'about' ? (
+              {studioPreviewOpen ? (
+                <>
+                  <div className="preview-slate">
+                    <div className="preview-shot-card">
+                      <span>Scene</span>
+                      <strong>{currentProject.cardTitle}</strong>
+                      <small>{currentProject.subtitle}</small>
+                    </div>
+                    <div className="preview-shot-card">
+                      <span>Camera Move</span>
+                      <strong>Dolly In</strong>
+                      <small>Card opens into a notebook plane with active stage props.</small>
+                    </div>
+                    <div className="preview-shot-card">
+                      <span>Light Cue</span>
+                      <strong>{currentProject.tag}</strong>
+                      <small>Accent rim light, spotlight halo, and prop glow follow this set.</small>
+                    </div>
+                  </div>
+                  <div className="preview-timeline" aria-label="Studio preview timeline">
+                    <div><span>Problem</span><strong>{currentProject.details[0]}</strong></div>
+                    <div><span>Architecture</span><strong>{currentProject.details[1]}</strong></div>
+                    <div><span>Demo</span><strong>{currentProject.details[2]}</strong></div>
+                    <div><span>Result</span><strong>{currentProject.metrics[0].value}</strong></div>
+                  </div>
+                </>
+              ) : showModal === 'director' ? (
                 <>
                   <div className="terminal-line">
                     <span className="terminal-prompt">Studio note</span>

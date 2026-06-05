@@ -29,3 +29,22 @@
   100% { opacity: 0; }
   50% { opacity: 1; }
 }
+
+@keyframes clapper-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-14px) rotateX(-18deg) scale(0.92);
+  }
+  18% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) rotateX(0deg) scale(1.03);
+  }
+  72% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) rotateX(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) rotateX(8deg) scale(0.98);
+  }
+}

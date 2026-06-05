@@ -28,6 +28,21 @@ html {
   min-height: auto;
 }
 
+button:focus-visible,
+[role='button']:focus-visible,
+.nav-item:focus-visible,
+.carousel-thumb:focus-visible,
+.btn-arrow:focus-visible {
+  outline: 3px solid rgba(116, 185, 170, 0.52);
+  outline-offset: 3px;
+}
+
+.radar-project-dot:focus-visible,
+.compass-poi:focus-visible {
+  outline: 2px solid rgba(233, 141, 156, 0.62);
+  outline-offset: 5px;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }

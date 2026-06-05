@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=M+PLUS+Rounded+1c:wght@700;800;900&family=Nunito:wght@500;600;700;800;900&display=swap');
 
 :root {
   --color-bg: #fff0df;
@@ -20,6 +20,18 @@
   --color-sky: #95bbe6;
   --color-cream: #fff8df;
 
-  --font-hud: 'Nunito', 'Inter', sans-serif;
+  --motion-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-panel: cubic-bezier(0.2, 0.9, 0.18, 1);
+  --shadow-paper: 0 24px 70px rgba(90, 67, 80, 0.18);
+  --shadow-stage: 0 28px 84px rgba(92, 70, 88, 0.22);
+  --shadow-glow-cyan: 0 0 34px rgba(116, 185, 170, 0.28);
+  --shadow-glow-magenta: 0 0 34px rgba(233, 141, 156, 0.28);
+  --radius-card: 36px;
+  --radius-panel: 22px;
+  --radius-pill: 999px;
+
+  --font-hud: 'Nunito', 'M PLUS Rounded 1c', 'Inter', sans-serif;
+  --font-display: 'M PLUS Rounded 1c', 'Nunito', 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
 }

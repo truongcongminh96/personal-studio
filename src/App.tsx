@@ -49,8 +49,8 @@ function App() {
       style={{
         position: 'relative',
         width: '100vw',
-        height: '100vh',
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: '100dvh',
         overflow: 'hidden',
         backgroundColor: '#fff7ef',
       }}
@@ -72,7 +72,7 @@ function App() {
           zIndex: 10,
           width: '100%',
           height: '100%',
-          minHeight: '100vh',
+          minHeight: '100dvh',
         }}
       >
         {/* 3D WebGL Showroom Background */}

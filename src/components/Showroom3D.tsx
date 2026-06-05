@@ -18,6 +18,20 @@ const doodleConfigs = [
   { kind: 'heart' as const, color: '#f8b7c4', x: 6.2, y: 4.1, z: -6.0, s: 0.46 },
 ];
 
+const exploreCardPositions = [
+  { x: -5.0, z: -1.6, rotY: 0.32, scale: 0.88, opacity: 0.86 },
+  { x: -1.7, z: -0.4, rotY: 0.06, scale: 1.03, opacity: 0.96 },
+  { x: 1.7,  z: -0.4, rotY: -0.06, scale: 1.03, opacity: 0.96 },
+  { x: 5.0,  z: -1.6, rotY: -0.32, scale: 0.88, opacity: 0.86 },
+];
+
+const cardWorldPositions = [
+  { x: -5.0, z: -1.6 },
+  { x: -1.7, z: -0.4 },
+  { x: 1.7, z: -0.4 },
+  { x: 5.0, z: -1.6 },
+];
+
 const createGlowTexture = (colorStr: string) => {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
@@ -35,6 +49,168 @@ const createGlowTexture = (colorStr: string) => {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+};
+
+type DisposableBucket = {
+  materials: THREE.Material[];
+  geometries: THREE.BufferGeometry[];
+  textures: THREE.Texture[];
+};
+
+const createStageProps = (index: number, projectAccent: string, bucket: DisposableBucket) => {
+  const group = new THREE.Group();
+  group.name = `studio-set-${index}`;
+
+  const makeMaterial = (color: string, opacity = 1, wireframe = false) => {
+    const material = new THREE.MeshBasicMaterial({
+      color,
+      transparent: opacity < 1,
+      opacity,
+      wireframe,
+      depthWrite: opacity >= 0.72,
+    });
+    material.userData.baseOpacity = opacity;
+    bucket.materials.push(material);
+    return material;
+  };
+
+  const makeMesh = (
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    position: [number, number, number],
+    scale: [number, number, number] = [1, 1, 1],
+  ) => {
+    bucket.geometries.push(geometry);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...position);
+    mesh.scale.set(...scale);
+    group.add(mesh);
+    return mesh;
+  };
+
+  const accentMaterial = makeMaterial(projectAccent, 0.9);
+  const softMaterial = makeMaterial('#fff8df', 0.84);
+  const cyanMaterial = makeMaterial('#74b9aa', 0.82);
+  const lavenderMaterial = makeMaterial('#a7a6d8', 0.82);
+  const lineMaterial = new THREE.LineBasicMaterial({ color: projectAccent, transparent: true, opacity: 0.54 });
+  lineMaterial.userData.baseOpacity = 0.54;
+  bucket.materials.push(lineMaterial);
+
+  if (index === 0) {
+    const nodes: [number, number, number][] = [
+      [-1.55, 0.52, 0.22], [-1.2, 0.82, 0.2], [-0.9, 0.46, 0.24],
+      [1.42, -0.46, 0.24], [1.72, -0.1, 0.2], [1.36, 0.22, 0.26],
+    ];
+
+    nodes.forEach((pos, nodeIdx) => {
+      makeMesh(
+        new THREE.SphereGeometry(nodeIdx % 3 === 1 ? 0.08 : 0.06, 16, 16),
+        nodeIdx % 2 === 0 ? accentMaterial : cyanMaterial,
+        pos,
+      );
+    });
+
+    [[0, 1], [1, 2], [3, 4], [4, 5], [1, 5]].forEach(([a, b]) => {
+      const geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(...nodes[a]),
+        new THREE.Vector3(...nodes[b]),
+      ]);
+      bucket.geometries.push(geometry);
+      group.add(new THREE.Line(geometry, lineMaterial));
+    });
+  } else if (index === 1) {
+    [-0.18, 0.08, 0.34].forEach((yOffset, layerIdx) => {
+      const capsule = makeMesh(
+        new THREE.CylinderGeometry(0.16, 0.16, 0.78, 28),
+        layerIdx === 1 ? cyanMaterial : softMaterial,
+        [1.42, yOffset, 0.24],
+        [1, 1, 1],
+      );
+      capsule.rotation.z = Math.PI / 2;
+    });
+
+    [-1.58, -1.36, -1.14].forEach((xOffset, bookIdx) => {
+      const book = makeMesh(
+        new THREE.BoxGeometry(0.14, 0.54, 0.08),
+        bookIdx === 1 ? accentMaterial : lavenderMaterial,
+        [xOffset, -0.2 + bookIdx * 0.08, 0.22],
+      );
+      book.rotation.z = -0.18 + bookIdx * 0.18;
+    });
+
+    const beam = makeMesh(
+      new THREE.PlaneGeometry(1.22, 0.14),
+      makeMaterial(projectAccent, 0.18),
+      [0.14, 0.24, 0.19],
+    );
+    beam.rotation.z = -0.18;
+  } else if (index === 2) {
+    [-0.42, 0.0, 0.42].forEach((xOffset, towerIdx) => {
+      const tower = makeMesh(
+        new THREE.CylinderGeometry(0.13, 0.13, towerIdx === 1 ? 0.9 : 0.64, 24),
+        towerIdx === 1 ? lavenderMaterial : softMaterial,
+        [0.94 + xOffset, 0.06, 0.24],
+      );
+      tower.rotation.z = 0.04 - towerIdx * 0.04;
+    });
+
+    [-1.46, -1.12, -0.78].forEach((xOffset, blockIdx) => {
+      const block = makeMesh(
+        new THREE.BoxGeometry(0.28, 0.18, 0.1),
+        blockIdx === 1 ? accentMaterial : cyanMaterial,
+        [xOffset, -0.44, 0.22],
+      );
+      block.rotation.z = 0.08;
+    });
+
+    const conveyor = makeMesh(
+      new THREE.BoxGeometry(1.1, 0.06, 0.05),
+      makeMaterial('#6d6688', 0.36),
+      [-1.1, -0.64, 0.18],
+    );
+    conveyor.rotation.z = 0.08;
+  } else {
+    const rig = makeMesh(
+      new THREE.TorusGeometry(0.34, 0.018, 8, 64),
+      accentMaterial,
+      [-1.36, 0.18, 0.24],
+    );
+    rig.rotation.x = Math.PI / 2.8;
+    rig.rotation.y = Math.PI / 5;
+
+    const cube = makeMesh(
+      new THREE.BoxGeometry(0.48, 0.48, 0.48),
+      makeMaterial(projectAccent, 0.78, true),
+      [1.34, 0.12, 0.24],
+    );
+    cube.rotation.set(0.54, 0.46, 0.2);
+
+    const fountainGeometry = new THREE.BufferGeometry();
+    const fountainPositions = new Float32Array(42 * 3);
+    for (let i = 0; i < 42; i++) {
+      fountainPositions[i * 3] = (Math.random() - 0.5) * 0.58;
+      fountainPositions[i * 3 + 1] = Math.random() * 0.72 - 0.18;
+      fountainPositions[i * 3 + 2] = (Math.random() - 0.5) * 0.16 + 0.18;
+    }
+    fountainGeometry.setAttribute('position', new THREE.BufferAttribute(fountainPositions, 3));
+    bucket.geometries.push(fountainGeometry);
+
+    const fountainMaterial = new THREE.PointsMaterial({
+      color: projectAccent,
+      size: 0.05,
+      transparent: true,
+      opacity: 0.72,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    fountainMaterial.userData.baseOpacity = 0.72;
+    bucket.materials.push(fountainMaterial);
+    const fountain = new THREE.Points(fountainGeometry, fountainMaterial);
+    fountain.position.set(-0.05, -0.38, 0.22);
+    group.add(fountain);
+  }
+
+  return group;
 };
 
 export const Showroom3D: React.FC<Showroom3DProps> = ({
@@ -100,6 +276,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     ];
 
     const doodleSprites: THREE.Sprite[] = [];
+    const doodleBaseScales: number[] = [];
     doodleConfigs.forEach((doodle) => {
       const tex = createDoodleTexture(doodle.kind, doodle.color);
       disposableTextures.push(tex);
@@ -112,6 +289,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       const sprite = new THREE.Sprite(material);
       sprite.position.set(doodle.x, doodle.y, doodle.z);
       sprite.scale.set(doodle.s, doodle.s, 1);
+      doodleBaseScales.push(doodle.s);
       scene.add(sprite);
       doodleSprites.push(sprite);
       sceneObjects.push(sprite);
@@ -128,8 +306,8 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       const cardMat = new THREE.MeshBasicMaterial({
         map: richTex,
         transparent: true,
-        opacity: 0.98,
-        side: THREE.DoubleSide,
+        opacity: 1,
+        side: THREE.FrontSide,
       });
       disposableMaterials.push(cardMat);
 
@@ -162,6 +340,21 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       scene.add(halo);
       cardHalos.push(halo);
       sceneObjects.push(halo);
+    }
+
+    const stagePropGroups: THREE.Group[] = [];
+    const disposableBucket: DisposableBucket = {
+      materials: disposableMaterials,
+      geometries: disposableGeometries,
+      textures: disposableTextures,
+    };
+
+    for (let i = 0; i < PROJECT_COUNT; i++) {
+      const stageProps = createStageProps(i, projects[i].accent, disposableBucket);
+      stageProps.visible = true;
+      scene.add(stageProps);
+      stagePropGroups.push(stageProps);
+      sceneObjects.push(stageProps);
     }
 
     // Generate circular particle texture
@@ -210,6 +403,8 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
     const mouse = new THREE.Vector2();
     let hoveredCardIdx: number | null = null;
     const mouseParallax = { x: 0, y: 0 };
+    let clickedCardIdx: number | null = null;
+    let clickBurstStarted = 0;
 
     const handleMouseMove = (event: MouseEvent) => {
       const rect = renderer.domElement.getBoundingClientRect();
@@ -244,6 +439,9 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         const clickedCard = intersects[0].object as THREE.Mesh;
         const clickedIdx = cards.indexOf(clickedCard);
 
+        clickedCardIdx = clickedIdx;
+        clickBurstStarted = (performance.now() - startTime) / 1000;
+
         onCardClick(clickedIdx);
       }
     };
@@ -263,10 +461,23 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
       const curActiveProject = activeProjectRef.current;
       const curViewMode = viewModeRef.current;
 
+      const hoveredWorldPosition = hoveredCardIdx !== null ? cardWorldPositions[hoveredCardIdx] : null;
+
       doodleSprites.forEach((sprite, idx) => {
+        const hoverInfluence = hoveredWorldPosition
+          ? Math.max(0, 1 - Math.abs(sprite.position.x - hoveredWorldPosition.x) / 5.5)
+          : 0;
+        const baseScale = doodleBaseScales[idx];
         sprite.position.y += Math.sin(time * 0.8 + idx) * 0.0009;
         sprite.material.rotation = Math.sin(time * 0.35 + idx) * 0.08;
+        const nextScale = baseScale * (1 + hoverInfluence * (0.04 + Math.sin(time * 3 + idx) * 0.035));
+        sprite.scale.x = THREE.MathUtils.lerp(sprite.scale.x, nextScale, 0.08);
+        sprite.scale.y = THREE.MathUtils.lerp(sprite.scale.y, nextScale, 0.08);
       });
+
+      const activeAccent = new THREE.Color(projects[curActiveProject].accent);
+      fillLight.color.lerp(activeAccent, 0.035);
+      sunLight.color.lerp(new THREE.Color(curViewMode === 'focus' ? projects[curActiveProject].accentSoft : '#ffc6a8'), 0.02);
 
       cards.forEach((card, idx) => {
         let offset = idx - curActiveProject;
@@ -281,14 +492,8 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
         let targetOpacity: number;
 
         if (curViewMode === 'explore') {
-          // Elegant arc layout — all 4 cards clearly visible
-          const arcPositions = [
-            { x: -5.0, z: -1.6, rotY: 0.32, scale: 0.88, opacity: 0.92 },  // outer left
-            { x: -1.7, z: -0.4, rotY: 0.06, scale: 1.03, opacity: 0.98 },  // inner left
-            { x: 1.7,  z: -0.4, rotY: -0.06, scale: 1.03, opacity: 0.98 }, // inner right
-            { x: 5.0,  z: -1.6, rotY: -0.32, scale: 0.88, opacity: 0.92 }, // outer right
-          ];
-          const pos = arcPositions[idx] || arcPositions[0];
+          // Elegant arc layout with all 4 cards clearly visible
+          const pos = exploreCardPositions[idx] || exploreCardPositions[0];
           targetX = pos.x;
           targetZ = pos.z;
           targetRotY = pos.rotY;
@@ -299,7 +504,7 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
           targetZ = 1.25;
           targetRotY = -0.05;
           targetScale = 1.15;
-          targetOpacity = 0.98;
+          targetOpacity = 1;
         } else if (offset === -1 || offset === 3) {
           targetX = -3.5;
           targetZ = -0.3;
@@ -320,14 +525,41 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
           targetOpacity = 0.64;
         }
 
+        const isHovered = hoveredCardIdx === idx;
+        const isFocused = idx === curActiveProject && curViewMode === 'focus';
+        let clickPop = 0;
+        if (clickedCardIdx === idx) {
+          const clickProgress = Math.min(1, Math.max(0, (time - clickBurstStarted) / 0.56));
+          clickPop = Math.sin(clickProgress * Math.PI);
+          if (clickProgress >= 1) {
+            clickedCardIdx = null;
+          }
+        }
+
+        if (isHovered) {
+          targetZ += 0.18;
+          targetScale += 0.04;
+          targetRotY += -mouseParallax.x * 0.08;
+        }
+
+        if (clickPop > 0) {
+          targetZ += clickPop * 0.36;
+          targetScale += clickPop * 0.1;
+          targetRotY += clickPop * 0.08;
+        }
+
         const floatOffset = Math.sin(time * 1.1 + idx * 1.5) * 0.055;
         const finalTargetY = targetY + floatOffset;
-        const targetColor = idx === curActiveProject || hoveredCardIdx === idx ? whiteColor : dimColor;
+        const targetColor = idx === curActiveProject || isHovered ? whiteColor : dimColor;
+        const targetRotX = isHovered ? mouseParallax.y * -0.07 : 0;
+        const targetRotZ = clickPop > 0 ? clickPop * 0.025 : 0;
 
         card.position.x = THREE.MathUtils.lerp(card.position.x, targetX, 0.07);
         card.position.y = THREE.MathUtils.lerp(card.position.y, finalTargetY, 0.07);
         card.position.z = THREE.MathUtils.lerp(card.position.z, targetZ, 0.07);
+        card.rotation.x = THREE.MathUtils.lerp(card.rotation.x, targetRotX, 0.07);
         card.rotation.y = THREE.MathUtils.lerp(card.rotation.y, targetRotY, 0.07);
+        card.rotation.z = THREE.MathUtils.lerp(card.rotation.z, targetRotZ, 0.07);
 
         const nextScale = THREE.MathUtils.lerp(card.scale.x, targetScale, 0.07);
         card.scale.set(nextScale, nextScale, nextScale);
@@ -342,22 +574,21 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
           halo.position.x = card.position.x;
           halo.position.y = card.position.y;
           halo.position.z = THREE.MathUtils.lerp(halo.position.z, targetZ - 0.08, 0.07);
+          halo.rotation.x = card.rotation.x;
           halo.rotation.y = card.rotation.y;
+          halo.rotation.z = card.rotation.z;
 
-          const isFocused = idx === curActiveProject && curViewMode === 'focus';
-          const isHovered = hoveredCardIdx === idx;
-          
           let targetHaloOpacity = 0;
           let haloPulseScale = 1;
 
           if (isFocused) {
-            targetHaloOpacity = 0.88;
+            targetHaloOpacity = 0.44;
             haloPulseScale = 1.05 + Math.sin(time * 3.5) * 0.04;
           } else if (isHovered) {
-            targetHaloOpacity = 0.58;
+            targetHaloOpacity = 0.34;
             haloPulseScale = 1.03 + Math.sin(time * 2.0) * 0.02;
           } else if (curViewMode === 'explore') {
-            targetHaloOpacity = 0.22;
+            targetHaloOpacity = 0.12;
             haloPulseScale = 0.98 + Math.sin(time * 1.2 + idx) * 0.015;
           }
 
@@ -367,6 +598,34 @@ export const Showroom3D: React.FC<Showroom3DProps> = ({
 
           const hMat = halo.material as THREE.MeshBasicMaterial;
           hMat.opacity = THREE.MathUtils.lerp(hMat.opacity, targetHaloOpacity, 0.08);
+        }
+
+        const stageProps = stagePropGroups[idx];
+        if (stageProps) {
+          stageProps.position.x = card.position.x;
+          stageProps.position.y = card.position.y;
+          stageProps.position.z = card.position.z + 0.16;
+          stageProps.rotation.x = card.rotation.x * 0.6;
+          stageProps.rotation.y = card.rotation.y;
+          stageProps.rotation.z = card.rotation.z + Math.sin(time * 0.7 + idx) * 0.018;
+
+          const propScale = nextScale * (isFocused ? 1.1 : isHovered ? 1.04 : 0.88);
+          stageProps.scale.setScalar(THREE.MathUtils.lerp(stageProps.scale.x || 1, propScale, 0.07));
+
+          const propVisibility = isFocused ? 1 : isHovered ? 0.82 : curViewMode === 'explore' ? 0.48 : 0.2;
+          stageProps.traverse((object) => {
+            const material = (object as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+            if (!material) return;
+
+            const materials = Array.isArray(material) ? material : [material];
+            materials.forEach((item) => {
+              if ('opacity' in item) {
+                item.transparent = true;
+                const baseOpacity = typeof item.userData.baseOpacity === 'number' ? item.userData.baseOpacity : 1;
+                item.opacity = THREE.MathUtils.lerp(item.opacity, baseOpacity * propVisibility, 0.08);
+              }
+            });
+          });
         }
       });
 
